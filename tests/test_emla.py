@@ -1,10 +1,11 @@
 # Emla-smeerinstructie, losse app: de acht regio's, het briefje en de tekst
 # voor de brief. Draai met:  python3 -m http.server 9053  in de hoofdmap.
 #
-# Waar dit vooral op let: de zinnen moeten lETTERLIJK die van de poster zijn
-# (ze zijn overgetypt, niet herschreven), het briefje moet op één A4 passen, en
-# er mag niets bewaard worden.
+# Waar dit vooral op let: de zinnen moeten LETTERLIJK de overgetypte zinnen zijn
+# (ze zijn overgetypt, niet herschreven), er mag nergens een bronvermelding
+# staan, het briefje moet op één A4 passen, en er mag niets bewaard worden.
 import base64
+import re
 import sys
 import os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from playwright.sync_api import sync_playwright
@@ -12,7 +13,7 @@ from playwright.sync_api import sync_playwright
 B = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 URL = "http://localhost:9053/"
 
-# Letterlijk van de poster. Wijkt een zin hiervan af, dan is er iets herschreven.
+# Letterlijk overgetypt. Wijkt een zin hiervan af, dan is er iets herschreven.
 ZINNEN = [
     "Smeer de volledige voorzijde van het bovenbeen in, van heup tot net boven de knie.",
     "Smeer de binnenzijde van het bovenbeen in, van lies tot knie.",
@@ -21,8 +22,8 @@ ZINNEN = [
     "Smeer de voorzijde van het onderbeen in, over de volledige voorste onderbeenregio (van knie tot enkel).",
     "Smeer de binnenzijde van de voet in.",
     "Smeer de onderkant van de voet in, van de hiel tot aan de tenen.",
-    # Deze staat NIET op de poster: achtste regio, toegevoegd op aanwijzing van
-    # de arts, zin geschreven in dezelfde bewoording als de zeven andere.
+    # Deze stond niet in de oorspronkelijke instructie: achtste regio, toegevoegd
+    # op aanwijzing van de arts, zin geschreven zoals de zeven andere.
     "Smeer de bovenkant van de voet in, van de enkel tot aan de tenen.",
 ]
 ALLE = ["Voorzijde bovenbeen", "Binnenzijde bovenbeen", "Achterzijde bovenbeen",
@@ -66,8 +67,11 @@ with sync_playwright() as p:
 
     data = pg.evaluate("() => EMLA.regios.map(r => r.zin)")
     ontbreekt = [z for z in ZINNEN if z not in data]
-    check("zinnen letterlijk van de poster", not ontbreekt, "| anders: " + str(ontbreekt)[:160])
-    check("licentie van de tekeningen blijft staan",
+    check("zinnen ongewijzigd overgetypt", not ontbreekt, "| anders: " + str(ontbreekt)[:160])
+    # De licentietekst zelf blijft in anatomie-data.js staan: dat eist de
+    # MIT-licentie zolang de tekeningen gebruikt worden. Op het scherm komt hij
+    # niet meer; dat bewaakt de toets "nergens een bronvermelding" hieronder.
+    check("licentie van de tekeningen blijft in het bestand staan",
           pg.evaluate("() => /MIT/.test(ANATOMIE.bron) && !!ANATOMIE.paden.voor.BODY"))
 
     # Alle vijf de beenregio's tonen nu een aangeleverde foto; alleen de twee
@@ -194,12 +198,24 @@ with sync_playwright() as p:
     check("geen drie lege regels achter elkaar", "\n\n\n" not in t)
     check("alle regio's in de tekst", sum(t.count(n) for n in ALLE) >= 7)
     check("terugrekentijd in de tekst", "08:15" in t, "| " + t.split("\n")[2][:70])
-    check("bron erbij in de tekst voor het dossier", "UMCG Centrum voor Revalidatie" in t)
-
-    # Op het briefje dat de ouder meekrijgt staat juist geen bronvermelding meer.
-    check("geen bronvermelding op het briefje",
-          "naar de poster" not in pg.inner_text("#emBlad").lower()
-          and "umcg" not in pg.inner_text("#emBlad").lower())
+    # Nergens een bronvermelding: niet op het scherm, niet op het briefje en niet
+    # in de tekst voor het dossier. Dit was een uitdrukkelijke wens; eerder stond
+    # er onderaan de pagina en onderaan de Epic-tekst nog wel een bronregel.
+    # Op hele woorden, niet op losse letterreeksen: "poster" zit óók in
+    # "tibialis posterior", en dat is een spiernaam, geen bronvermelding. Die
+    # eerste versie van deze toets sloeg daarop aan. "mit" staat er niet bij,
+    # dat is als woord te gewoon.
+    SPOREN = ["poster", "umcg", "centrum voor revalidatie", "bron", "musclemap",
+              "bronvermelding", "overgenomen"]
+    pagina = pg.inner_text("body").lower()
+    gevonden_bron = sorted({w for w in SPOREN
+                            if re.search(r"\b" + w + r"\b", pagina)
+                            or re.search(r"\b" + w + r"\b", t.lower())})
+    check("nergens een bronvermelding", not gevonden_bron, "| " + str(gevonden_bron))
+    check("het herkomstregeltje is van de pagina af",
+          pg.locator("#emHerkomst").count() == 0)
+    check("EMLA heeft geen bronvelden meer",
+          pg.evaluate("() => !('bron' in EMLA) && !('bronTekening' in EMLA)"))
 
     # Geen spiernamen meer op het briefje en niet in de brief; dat was de
     # uitdrukkelijke wens. Zowel het blad als de Epic-tekst wordt nagelopen.
@@ -208,7 +224,7 @@ with sync_playwright() as p:
     gevonden = sorted({w for w in VERBODEN if w in blad_tekst or w in brief})
     check("geen spiernamen in de patiententekst", not gevonden, "| " + str(gevonden))
 
-    # De posterregel "Verwijder de zalf ... vlak voor de behandeling" is op
+    # De oorspronkelijke regel "Verwijder de zalf ... vlak voor de behandeling" is op
     # aanwijzing van de arts vervangen: de folie blijft om tot aan de
     # behandeling. Deze toets valt om zodra de oude instructie terugkeert.
     check("de folie blijft om tot aan de behandeling",

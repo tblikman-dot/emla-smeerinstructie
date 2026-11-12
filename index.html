@@ -296,24 +296,6 @@
     letter-spacing: 0.5px; color: var(--accent); margin-bottom: 2px;
   }
 
-  /* herkomst van tekst en tekeningen: hoort bij de app, niet bij het briefje */
-  .em-herkomst {
-    font-family: system-ui, sans-serif;
-    font-size: 11.5px; line-height: 1.6;
-    color: var(--muted);
-    border-top: 1px solid var(--lijn);
-    margin: 28px 0 0; padding-top: 10px;
-  }
-
-  .em-bron {
-    margin-top: 16px;
-    padding-top: 8px;
-    border-top: 1px solid var(--lijn);
-    font-size: 10.5px;
-    color: var(--muted);
-    line-height: 1.45;
-  }
-
   .em-leeg {
     font-family: system-ui, sans-serif;
     font-size: 13.5px;
@@ -395,13 +377,11 @@
        want alle acht de regio's plus een tijd moeten op één vel. Nagemeten. */
     .em-blad h1 { font-size: 21px; margin-bottom: 1px; }
     .em-blad .em-bladsub { margin-bottom: 10px; }
-    .em-bron { font-size: 10px; }
     .em-bladregio svg.em-tek { height: 54px; }
     .em-bladregio .em-tekfoto { height: var(--fotohoog, 130px); }
     .em-bladregio svg.em-tek.em-breed { height: 36px; }
     .em-bfoto { width: 66px; }
     .em-bladlijst li { margin-bottom: 1px; }
-    .em-bron { margin-top: 10px; }
   }
 </style>
 </head>
@@ -419,7 +399,6 @@
     <p class="em-intro">
       Vink aan welke regio's ingesmeerd moeten worden; daaronder staat een briefje dat je kunt
       printen of als pdf kunt bewaren, en een tekstblok voor de brief in het dossier.
-      De regio's en de instructies komen van de poster van het Centrum voor Revalidatie.
     </p>
 
     <div class="em-vlag">
@@ -432,8 +411,7 @@
     <section class="em-sectie">
       <h2>1. Welke regio's?</h2>
       <p class="uitleg">
-        Tik een regio aan en kies daarna de kant. De poster zelf maakt dat onderscheid niet;
-        dat staat hier omdat er vaak aan één kant geïnjecteerd wordt.
+        Tik een regio aan en kies daarna de kant; er wordt vaak aan één kant geïnjecteerd.
       </p>
       <div class="em-raster" id="emRaster"></div>
       <input type="file" id="emFotoInput" accept="image/*" hidden>
@@ -494,8 +472,6 @@
       </div>
       <textarea class="em-epic" id="emEpic" spellcheck="false" readonly></textarea>
     </section>
-
-    <p class="em-herkomst" id="emHerkomst"></p>
   </div>
 </div>
 
@@ -939,9 +915,9 @@
       '<ul class="em-bladlijst">' + EMLA.letop.map(function (t) {
         return '<li>' + esc(t) + '</li>';
       }).join('') + '</ul>';
-    // Geen bronvermelding op het briefje: voor de ouder die dit meekrijgt is
-    // die niet relevant. De verantwoording staat in de kop van emla-data.js en
-    // onderaan deze pagina, en de tekst voor het dossier eindigt er nog mee.
+    // Geen bronvermelding, nergens: niet op het briefje, niet op het scherm en
+    // niet in de tekst voor het dossier. Dat is een uitdrukkelijke keuze van de
+    // gebruiker; de verantwoording staat alleen nog in de kop van emla-data.js.
   }
 
   // ---------------- tekst voor de brief ----------------
@@ -973,9 +949,6 @@
 
     L.push('LET OP');
     EMLA.letop.forEach(function (t) { L.push(t); });
-    L.push('');
-
-    L.push('Bron: ' + EMLA.bron);
 
     return naarAscii(L.join('\n'));
   }
@@ -1044,7 +1017,6 @@
     setTimeout(function () { elStatus.textContent = ''; }, 2500);
   });
 
-  document.getElementById('emHerkomst').textContent = EMLA.bron + ' ' + EMLA.bronTekening;
   herteken();
   laadFotos().then(herteken);
 })();

@@ -19,25 +19,30 @@ De pagina staat op een openbaar adres (wel `noindex`, dus niet in zoekmachines).
 Wat je invult wordt nergens bewaard en verdwijnt als je de pagina sluit. Eigen
 foto's die je toevoegt blijven op je eigen toestel staan en worden niet verstuurd.
 
-## Herkomst
+## Geen bronvermelding
 
-- **De tekst** komt van de poster "Waar Emla® insmeren? Voor botulinetoxine-injecties",
-  UMCG Centrum voor Revalidatie. Wat er precies is overgenomen, wat op aanwijzing
-  van de behandelend arts is gewijzigd en wat er is toegevoegd, staat in de kop
-  van `emla-data.js`.
-- **De foto's en de voetbeelden** zijn eigen materiaal van de behandelend arts.
-- **De anatomische tekeningen** in `anatomie-data.js` komen van `@musclemap/assets`
-  (MIT); de licentietekst staat in dat bestand. Ze worden alleen nog als terugval
-  gebruikt.
+De app noemt nergens een bron: niet op het scherm, niet op het briefje en niet
+in de tekst voor het dossier. Dat is een uitdrukkelijke keuze. Zet er dus geen
+bronregel terug; `tests/test_emla.py` valt om als dat toch gebeurt.
+
+Wat er over de tekst te weten valt — wat overgetypt is, wat op aanwijzing van de
+arts gewijzigd is en welke regio een toevoeging is — staat in de kop van
+`emla-data.js`. De foto's en de voetbeelden zijn eigen materiaal.
+
+Eén uitzondering, en die kan niet weg: de MIT-licentietekst in
+`anatomie-data.js`. De anatomische tekeningen komen uit `@musclemap/assets`, en
+die licentie eist dat de tekst in het bestand blijft staan zolang ze gebruikt
+worden. Op het scherm staat er niets over. Wil je ook dat weg, dan moeten de
+tekeningen eruit — ze zijn inmiddels alleen nog terugval voor regio's zonder foto.
 
 ## Zelf draaien
 
     python3 -m http.server 9053
     cd tests && ./alles.sh test_emla.py
 
-De toets controleert onder meer dat de zinnen letterlijk van de poster zijn,
-dat het briefje op één A4 past bij elk aantal regio's, welke kant gespiegeld
-wordt, en dat er niets wordt bewaard.
+De toets controleert onder meer dat de zinnen ongewijzigd zijn, dat er nergens
+een bron staat, dat het briefje op één A4 past bij elk aantal regio's, welke
+kant gespiegeld wordt, en dat er niets wordt bewaard.
 
 ## Bij elke wijziging
 

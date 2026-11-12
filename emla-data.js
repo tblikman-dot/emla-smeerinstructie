@@ -1,8 +1,14 @@
 // Emla-smeerinstructie — tekst en tekeningen.
 //
-// BRON VAN DE TEKST: poster "Waar Emla® insmeren? Voor botulinetoxine-injecties",
-// UMCG Centrum voor Revalidatie, overgetypt uit een schermafbeelding van die
-// poster — niet uit het bronbestand zelf.
+// HERKOMST VAN DE TEKST: de regio's en de instructies komen van de poster van
+// het Centrum voor Revalidatie, overgetypt uit een schermafbeelding — niet uit
+// het bronbestand zelf.
+//
+// DIE VERMELDING STAAT MET OPZET NERGENS MEER IN DE APP: niet op het scherm,
+// niet op het briefje en niet in de tekst voor het dossier. Dat is een
+// uitdrukkelijke keuze van de gebruiker ("alle bronnen weg"). Zet er dus geen
+// bronregel terug. Hij staat hier alleen nog zodat duidelijk is waarom de
+// zinnen hieronder niet vrij te herschrijven zijn.
 //
 // De zinnen zijn NIET meer letterlijk die van de poster. Op verzoek van de
 // gebruiker zijn de spiernamen eruit gehaald (rectus femoris, quadricepsregio,
@@ -33,7 +39,7 @@
 // invullen"), in dezelfde bewoording als de zeven posterregio's. Alles wat van
 // de poster komt staat er dus nog letterlijk; dit is het enige dat niet.
 //
-// BRON VAN DE FOTO'S: aangeleverd door de gebruiker, eigen materiaal; het paarse
+// HERKOMST VAN DE FOTO'S: aangeleverd door de gebruiker, eigen materiaal; het paarse
 // vlak zit al op de foto. De drie voetbeelden zijn renders, de vijf beenfoto's
 // zijn fotografie. Zeven beelden tonen de RECHTERkant; de voetzool toont als
 // enige de LINKERvoet (zie de aantekening bij die regio). De foto's gaan er ONBEWERKT in: alleen verkleind, niet
@@ -46,7 +52,10 @@
 // in de tekst van het briefje. De regel bij 'arts' is een aantekening van de
 // gebruiker voor zichzelf; die staat wel op het scherm en niet op het briefje.
 //
-// BRON VAN DE TEKENINGEN: anatomie-data.js (@musclemap/assets, MIT). Een regio
+// HERKOMST VAN DE TEKENINGEN: anatomie-data.js (@musclemap/assets, MIT). De
+// licentietekst in dat bestand moet blijven staan zolang de tekeningen gebruikt
+// worden; dat is een voorwaarde van de MIT-licentie en geen bronvermelding die
+// hier weg kan. Op het scherm staat hij niet meer. Een regio
 // beschrijft hier alleen wélk stuk van dat lichaam moet oplichten; emla.html
 // tekent het. Vier soorten:
 //   spier         - een of meer spierpaden lichten op
@@ -71,7 +80,7 @@
       titel: 'Voorzijde bovenbeen',
       sub: '',
       zin: 'Smeer de volledige voorzijde van het bovenbeen in, van heup tot net boven de knie.',
-      arts: 'Rectus femoris en de overige quadriceps; op de poster waren dit twee regio\u2019s.',
+      arts: 'Rectus femoris en de overige quadriceps; dit waren eerst twee regio\u2019s.',
       foto: 'smeer-bovenbeen-voor.webp',
       fotoKant: 'R',
       tekening: {
@@ -146,7 +155,7 @@
       titel: 'Binnenzijde van de voet',
       sub: '',
       zin: 'Smeer de binnenzijde van de voet in.',
-      arts: 'Spierbuik van de abductor hallucis; zo stond het op de poster.',
+      arts: 'Spierbuik van de abductor hallucis.',
       foto: 'smeer-voet-binnen.webp',
       fotoKant: 'R',
     },
@@ -165,7 +174,7 @@
     },
   ];
 
-  // Het kader bovenaan de poster. In de schermafbeelding staan de woorden
+  // Het kader bovenaan de oorspronkelijke instructie. In de schermafbeelding staan de woorden
   // "over het" in lichtere letters, alsof ze zijn doorgehaald; de zin is hier
   // overgenomen zoals hij gelezen hoort te worden.
   var INTRO = [
@@ -207,8 +216,6 @@
     '</svg>';
 
   global.EMLA = {
-    bron: 'Naar de poster “Waar Emla® insmeren? Voor botulinetoxine-injecties”, UMCG Centrum voor Revalidatie; tekst aangepast op aanwijzing van de behandelend arts.',
-    bronTekening: 'Lichaamstekeningen: @musclemap/assets (MIT).',
     vooraf: VOORAF,
     intro: INTRO,
     regios: REGIOS,
