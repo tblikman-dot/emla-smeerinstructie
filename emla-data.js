@@ -158,6 +158,10 @@
       arts: 'Spierbuik van de abductor hallucis.',
       foto: 'smeer-voet-binnen.webp',
       fotoKant: 'R',
+      // Als enige een liggend beeld (1747 x 1100); de andere zeven zijn staand.
+      // Staan er twee naast elkaar, dan wordt dit beeld op breedte opgemeten in
+      // plaats van op hoogte, anders blijft er een hoge lege strook over.
+      fotoBreed: true,
     },
     {
       id: 'voetzool',

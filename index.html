@@ -258,6 +258,31 @@
   }
   .em-bladregio svg.em-tek.em-breed { height: 42px; max-width: 84px; }
 
+  /* Links en rechts hebben elk een eigen kleur: blauw en oranjebruin. Die twee
+     blijven ook uit elkaar te houden voor wie kleurenblind is. Op een afdruk in
+     grijstinten valt kleur helemaal weg, dus het wóórd staat er altijd bij. */
+  .em-kantL { --kant: #1A5FB4; }
+  .em-kantR { --kant: #A8500A; }
+
+  /* Worden beide benen ingesmeerd, dan staan ze er allebei op: links en rechts
+     naast elkaar, elk met het juiste been in beeld. Samen even breed als één
+     beeld eerst was, zodat de tekst ernaast evenveel ruimte houdt. */
+  .em-fotopaar { display: flex; gap: 6px; flex: none; align-items: flex-end; }
+  /* Een liggend beeld wordt op breedte opgemeten, niet op hoogte: anders staat
+     het bijschrift onderaan een hoge lege strook. Zie fotoBreed in emla-data.js. */
+  .em-fotopaar .em-tekfoto.em-breedfoto {
+    height: auto; width: 58px; max-height: var(--fotohoog);
+  }
+  .em-fotopaar figure {
+    margin: 0; display: flex; flex-direction: column; align-items: center;
+  }
+  .em-fotopaar .em-tekfoto { max-width: 58px; }
+  .em-fotopaar figcaption {
+    margin-top: 1px;
+    font-size: 9px; line-height: 1.15; font-weight: 700;
+    color: var(--kant);
+  }
+
   /* eigen foto op het briefje, met het vlak eroverheen */
   .em-bfoto.em-kfoto { width: 58px; border-radius: 6px; overflow: hidden; }
   .em-bfoto { position: relative; flex: none; width: 74px; line-height: 0; }
@@ -269,11 +294,13 @@
     margin-left: 5px;
     padding: 1px 7px;
     border-radius: 20px;
-    background: var(--accent);
+    background: var(--kant, var(--accent));
     color: #fff;
     font-size: 11px;
     vertical-align: 1px;
   }
+  /* bij beide zijden staan er twee merkjes naast elkaar */
+  .em-bladregio .em-bkant + .em-bkant { margin-left: 3px; }
   /* voorzijde of achterzijde staat niet in de tekening, wel hier */
   .em-bladregio .em-bsub { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
   .em-bladregio .em-bzin { font-size: 12.5px; line-height: 1.45; margin-top: 3px; }
@@ -659,27 +686,51 @@
   // andere kant gespiegeld en bij "beide" twee keer getoond. Zonder fotoKant
   // blijft het één beeld en staat de kant alleen in de tekst.
   function fotoBeeld(regio, spiegel, watVoorKant) {
-    return '<img class="em-tekfoto' + (spiegel ? ' em-gespiegeld' : '') + '" src="' +
+    return '<img class="em-tekfoto' + (spiegel ? ' em-gespiegeld' : '') +
+      (regio.fotoBreed ? ' em-breedfoto' : '') + '" src="' +
       regio.foto + '" alt="' + esc(regio.titel + (watVoorKant ? ', ' + watVoorKant : '') +
       ': het gekleurde vlak laat zien waar de crème moet komen.') + '">';
   }
 
-  function beeldVan(regio, kant, klasse) {
+  // Eén been, met het woord eronder in de kleur van die kant.
+  function beenMetWoord(regio, k) {
+    var woord = (k === 'L' ? 'links' : 'rechts');
+    return '<figure class="em-kant' + k + '">' +
+      fotoBeeld(regio, k !== regio.fotoKant, woord) +
+      '<figcaption>' + woord + '</figcaption></figure>';
+  }
+
+  // paar = true op het briefje: worden beide benen ingesmeerd, dan komen ze er
+  // ook allebei op te staan. Op de keuzekaartjes blijft het één beeld, anders
+  // wordt dat raster onrustig.
+  function beeldVan(regio, kant, klasse, paar) {
     if (fotos[regio.id]) return fotoBlok(regio.id, klasse);
 
     if (regio.foto) {
       if (!regio.fotoKant) return fotoBeeld(regio, false, '');
-      // Eén been per regio, niet twee naast elkaar: dat geeft de foto de volle
-      // breedte en daarmee de dubbele grootte. Welke kant het is staat in het
-      // label ernaast; bij "beide" staat het been zoals het is aangeleverd.
       var k = kant || 'LR';
-      if (k === 'LR') return fotoBeeld(regio, false, 'beide zijden');
+      if (k === 'LR') {
+        if (!paar) return fotoBeeld(regio, false, 'beide zijden');
+        return '<div class="em-fotopaar">' +
+          beenMetWoord(regio, 'L') + beenMetWoord(regio, 'R') + '</div>';
+      }
       // spiegelen zodra de gevraagde kant niet de kant van de foto is
       var spiegel = (k !== regio.fotoKant);
       return fotoBeeld(regio, spiegel, k === 'L' ? 'links' : 'rechts');
     }
 
     return tekenRegio(regio, kant);
+  }
+
+  // Het merkje achter de naam op het briefje. Bij beide zijden twee merkjes,
+  // elk in zijn eigen kleur, zodat er niet één kleur voor allebei staat.
+  function kantMerk(code) {
+    if (code === 'LR') return merkje('L') + merkje('R');
+    return merkje(code);
+  }
+  function merkje(k) {
+    return '<span class="em-bkant em-kant' + k + '">' +
+      (k === 'L' ? 'links' : 'rechts') + '</span>';
   }
 
   var elDoek = document.getElementById('emDoek');
@@ -871,16 +922,27 @@
   // trap is nagemeten; test_emla.py bewaakt de ondergrens.
   // Nagemeten op A4 (794 x 1123 px): bij zeven of acht regio's loopt het blad
   // over bij 158 px.
-  function fotoHoogte(aantal) {
+  // Staat er ergens een stel van twee benen, dan is elke rij hoger: er komt een
+  // bijschrift onder de beelden. Dan moeten de beelden iets kleiner, anders
+  // past het briefje niet meer op één vel. Is alles eenzijdig, dan verandert er
+  // niets aan de maten van vroeger. Allemaal nagemeten in tests/test_emla.py.
+  function fotoHoogte(aantal, paren) {
     if (aantal <= 2) return 410;
-    if (aantal <= 4) return 275;
-    if (aantal <= 6) return 182;
-    return 138;
+    if (aantal <= 4) return paren ? 266 : 275;
+    if (aantal <= 6) return paren ? 170 : 182;
+    return paren ? 121 : 138;
+  }
+
+  function heeftParen(lijst) {
+    return lijst.some(function (r) {
+      return keuze[r.id] === 'LR' && r.fotoKant && r.foto && !fotos[r.id];
+    });
   }
 
   function tekenBlad() {
     var lijst = gekozen();
-    elBlad.style.setProperty('--fotohoog', fotoHoogte(lijst.length) + 'px');
+    elBlad.style.setProperty('--fotohoog',
+      fotoHoogte(lijst.length, heeftParen(lijst)) + 'px');
 
     if (!lijst.length) {
       elBlad.innerHTML = '<div class="em-leeg">Kies hierboven één of meer regio\'s. ' +
@@ -890,9 +952,9 @@
 
     var regiosHtml = lijst.map(function (r) {
       return '<div class="em-bladregio">' +
-        '<div class="em-vink"></div>' + beeldVan(r, keuze[r.id], 'em-bfoto') +
+        '<div class="em-vink"></div>' + beeldVan(r, keuze[r.id], 'em-bfoto', true) +
         '<div><div class="em-bnaam">' + esc(r.titel) +
-          '<span class="em-bkant">' + esc(kantWoord(keuze[r.id])) + '</span></div>' +
+          kantMerk(keuze[r.id]) + '</div>' +
           '<div class="em-bsub">' + esc(r.sub) + '</div>' +
           '<div class="em-bzin">' + esc(r.zin) + '</div></div>' +
         '</div>';
