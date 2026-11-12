@@ -6,7 +6,7 @@
 // een gedeelde naam zou de ene de bestanden van de andere laten weggooien.
 //
 // Let op bij wijzigen: verhoog CACHE_VERSIE, anders blijven oude bestanden hangen.
-const CACHE_VERSIE = 'emla-v4';
+const CACHE_VERSIE = 'emla-v5';
 
 const APP_BESTANDEN = [
   './',
@@ -27,6 +27,8 @@ const APP_BESTANDEN = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
 ];
 
 self.addEventListener('install', event => {

@@ -1,0 +1,59 @@
+<!-- Bronbestand van het app-icoon: een tubetje, cartoonachtig en simpel.
+     Eigen tekening. Met opzet een algemeen tubetje: geen merknaam, geen letters,
+     geen nabootsing van de echte verpakking. Het paars is gemeten in
+     smeer-kuit.webp, zodat het bij de kleuren van de app past.
+
+     Hieruit worden de PNG's gemaakt met tests/maak-icoon.py. Verander het icoon
+     dus hier en draai dat script opnieuw; teken niet in de PNG's.
+
+     De groep met id="art" wordt door dat script geschaald: voor de gewone tegel
+     bijna schermvullend, voor de Android-maskeerbare versie kleiner, omdat
+     Android daar zelf een ronde of vierkante mal overheen legt en de randen
+     wegsnijdt. De achtergrond blijft wel het hele vlak vullen.
+
+     Dikke lijnen, platte vlakken, ronde hoeken: dat houdt het leesbaar als het
+     icoon op een telefoon nog maar 48 pixels groot is. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="achter" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B8AE8"/>
+      <stop offset="1" stop-color="#0A57BC"/>
+    </linearGradient>
+
+    <!-- de omtrek van het tubelijf; ook gebruikt om de band af te snijden -->
+    <path id="lijf"
+          d="M184 392
+             L198 200
+             C200 176, 212 160, 230 158
+             L282 158
+             C300 160, 312 176, 314 200
+             L328 392 Z"/>
+    <clipPath id="lijfmal">
+      <use href="#lijf"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#achter)"/>
+
+  <g id="art" stroke="#0E3C7A" stroke-width="13" stroke-linejoin="round" stroke-linecap="round">
+
+    <!-- dop -->
+    <rect x="214" y="92" width="84" height="70" rx="16" fill="#DC82D2"/>
+
+    <!-- lijf -->
+    <use href="#lijf" fill="#FFFFFF"/>
+
+    <!-- band over het lijf, afgesneden op de omtrek -->
+    <g clip-path="url(#lijfmal)" stroke="none">
+      <rect x="170" y="252" width="172" height="74" fill="#DC82D2"/>
+    </g>
+
+    <!-- de omtrek nog eens overheen, zodat de band niet over de rand loopt -->
+    <use href="#lijf" fill="none"/>
+
+    <!-- dichtgeknepen onderkant -->
+    <rect x="170" y="386" width="172" height="40" rx="12" fill="#FFFFFF"/>
+    <path d="M226 396 L226 416" stroke-width="10"/>
+    <path d="M286 396 L286 416" stroke-width="10"/>
+  </g>
+</svg>

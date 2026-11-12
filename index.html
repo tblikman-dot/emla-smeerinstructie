@@ -5,11 +5,16 @@
 <title>Emla-smeerinstructie</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#0f4c5c">
+<!-- Kleur van de systeembalk als de app vanaf het startscherm wordt geopend.
+     Twee regels, want de pagina volgt het donkere scherm van het toestel. -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<!-- iOS gebruikt deze, niet die uit het manifest, en rondt de hoeken zelf af -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Emla">
 <link rel="stylesheet" href="style.css">
 <style>

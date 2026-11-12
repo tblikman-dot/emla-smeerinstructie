@@ -379,5 +379,72 @@ with sync_playwright() as p:
     check("de pagina haalt niets van buiten", not buiten, "| " + str(buiten)[:120])
     pg.close()
 
+    # ---- op het startscherm zetten ----
+    # De app wordt niet uit een store geïnstalleerd maar via "toevoegen aan
+    # startscherm". Daar moet het manifest voor kloppen, moeten de iconen echt
+    # bestaan, en moet de service worker ze alle vier kunnen ophalen.
+    pg = b.new_context(viewport={"width": 390, "height": 900}).new_page()
+    pg.goto(URL)
+    pg.wait_for_timeout(400)
+    vraag = pg.context.request
+
+    # 1. Elk bestand dat de service worker bij het installeren ophaalt moet
+    #    bestaan. cache.addAll() weigert in zijn geheel zodra er één 404 geeft;
+    #    dan installeert de worker niet en werkt offline stilletjes niet meer.
+    sw = vraag.get(URL + "sw.js").text()
+    bestanden = re.findall(r"'\./([^']*)'", sw)
+    weg = [n for n in bestanden if n and vraag.get(URL + n).status >= 400]
+    check("de service worker mist geen bestand", not weg, "| " + str(weg))
+    check("de nieuwe iconen staan in de service worker",
+          "icon-maskable-512.png" in bestanden and "apple-touch-icon.png" in bestanden)
+
+    # 2. Het manifest: naam, standalone, en een maskeerbaar icoon voor Android.
+    mani = vraag.get(URL + "manifest.json").json()
+    check("het manifest opent als app, niet als tabblad",
+          mani.get("display") == "standalone")
+    doelen = {i["src"]: i for i in mani["icons"]}
+    check("er is een maskeerbaar icoon voor Android",
+          any("maskable" in i.get("purpose", "") for i in mani["icons"]))
+
+    # 3. De iconen bestaan én hebben de maat die het manifest belooft.
+    MAAT = """async (naam) => { const i = new Image(); i.src = naam + '?t=' + Date.now();
+               await i.decode(); return [i.naturalWidth, i.naturalHeight]; }"""
+    for src, item in doelen.items():
+        w, h = item["sizes"].split("x")
+        echt = pg.evaluate(MAAT, src)
+        check("icoon " + src + " is echt " + item["sizes"],
+              echt == [int(w), int(h)], "| " + str(echt))
+
+    # 4. iOS gebruikt de apple-touch-icon, niet het manifest. Die moet er zijn,
+    #    en hij mag niet meer naar het oude icoon van het naslagwerk wijzen.
+    appel = pg.get_attribute("link[rel='apple-touch-icon']", "href")
+    check("de iPhone krijgt een eigen icoon", appel == "apple-touch-icon.png",
+          "| " + str(appel))
+    check("dat bestand bestaat ook", vraag.get(URL + appel).status < 400)
+
+    # 5. De tegel mag niet meer de donkergroene KR-tegel van het naslagwerk zijn.
+    #    Die was egaal donker; deze heeft een blauwe achtergrond met wit erin.
+    KLEUREN = """async (naam) => {
+      const i = new Image(); i.src = naam + '?t=' + Date.now(); await i.decode();
+      const c = document.createElement('canvas');
+      c.width = i.naturalWidth; c.height = i.naturalHeight;
+      const x = c.getContext('2d'); x.drawImage(i, 0, 0);
+      const p = (a, b) => [...x.getImageData(a, b, 1, 1).data];
+      const mid = c.width >> 1;
+      return { hoek: p(2, 2),
+               lijf: p(mid, Math.round(c.height * 0.40)),
+               band: p(mid, Math.round(c.height * 0.56)) };
+    }"""
+    for naam in ("icon-192.png", "icon-512.png", "apple-touch-icon.png"):
+        k = pg.evaluate(KLEUREN, naam)
+        r, g, bl, a = k["hoek"]
+        blauw = a == 255 and bl > 120 and bl > r + 40          # achtergrond
+        wit = min(k["lijf"][:3]) > 150                          # het lijf
+        pr, pg_, pb, _ = k["band"]                              # de band erover
+        paars = pr > 150 and pb > 150 and pg_ < pr - 50
+        check("icoon " + naam + " is de nieuwe tegel", blauw and wit and paars,
+              "| " + str({n: k[n] for n in ("hoek", "lijf", "band")}))
+    pg.close()
+
     print("\nfails:", fails, "| errors:", errs + errs2)
     b.close()
