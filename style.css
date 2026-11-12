@@ -74,7 +74,7 @@ a { color: var(--accent); }
   color: var(--inkt);
 }
 
-/* Klein merkje rechts in de balk: van wie deze app is. Absoluut geplaatst en
+/* Klein copyrightregeltje rechts in de balk: van wie deze app is. Absoluut geplaatst en
    niet in de flexrij, zodat de titel in het midden van de balk blijft staan en
    niet opschuift. Bewust onopvallend: het hoort niet te concurreren met de
    titel. Staat in de topbar, en die wordt bij het printen verborgen, dus het

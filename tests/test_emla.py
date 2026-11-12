@@ -67,6 +67,13 @@ with sync_playwright() as p:
     # titel niet uit het midden duwen.
     merk = pg.locator(".topbar-merk")
     check("het merkje staat in de balk", merk.count() == 1 and "Blikman" in merk.inner_text())
+    # Het is een copyrightteken, geen merkteken. (R) zou een geregistreerd merk
+    # claimen en dat is het niet; (C) klopt wel, auteursrecht ontstaat vanzelf.
+    check("het merkje is het copyrightteken",
+          "©" in merk.inner_text()
+          and "™" not in merk.inner_text()
+          and "®" not in merk.inner_text(),
+          "| " + merk.inner_text())
     mdoos = merk.bounding_box()
     tdoos = pg.locator(".topbar-title").bounding_box()
     check("het merkje staat rechts", mdoos["x"] > tdoos["x"] + tdoos["width"],
