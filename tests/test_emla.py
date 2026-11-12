@@ -1,0 +1,367 @@
+# Emla-smeerinstructie, losse app: de acht regio's, het briefje en de tekst
+# voor de brief. Draai met:  python3 -m http.server 9053  in de hoofdmap.
+#
+# Waar dit vooral op let: de zinnen moeten lETTERLIJK die van de poster zijn
+# (ze zijn overgetypt, niet herschreven), het briefje moet op één A4 passen, en
+# er mag niets bewaard worden.
+import base64
+import sys
+import os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from playwright.sync_api import sync_playwright
+
+B = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+URL = "http://localhost:9053/"
+
+# Letterlijk van de poster. Wijkt een zin hiervan af, dan is er iets herschreven.
+ZINNEN = [
+    "Smeer de volledige voorzijde van het bovenbeen in, van heup tot net boven de knie.",
+    "Smeer de binnenzijde van het bovenbeen in, van lies tot knie.",
+    "Smeer de achterzijde van het bovenbeen in, van bilplooi tot net boven de knie.",
+    "Smeer de volledige kuit in, van net onder de knieplooi tot aan de hiel.",
+    "Smeer de voorzijde van het onderbeen in, over de volledige voorste onderbeenregio (van knie tot enkel).",
+    "Smeer de binnenzijde van de voet in.",
+    "Smeer de onderkant van de voet in, van de hiel tot aan de tenen.",
+    # Deze staat NIET op de poster: achtste regio, toegevoegd op aanwijzing van
+    # de arts, zin geschreven in dezelfde bewoording als de zeven andere.
+    "Smeer de bovenkant van de voet in, van de enkel tot aan de tenen.",
+]
+ALLE = ["Voorzijde bovenbeen", "Binnenzijde bovenbeen", "Achterzijde bovenbeen",
+        "Kuitregio", "Voorzijde onderbeen", "Bovenkant van de voet",
+        "Binnenzijde van de voet", "Onderkant van de voet"]
+
+# Op verzoek van de gebruiker staat er geen spiernaam meer op het briefje. Deze
+# toets valt om zodra er toch weer een in de patiententekst sluipt.
+VERBODEN = ["rectus femoris", "quadriceps", "adductoren", "adductorenregio", "hamstring",
+            "triceps surae", "gastrocnemius", "soleus", "abductor hallucis",
+            "mediale zijde", "plantaire"]
+
+fails = 0
+
+
+def check(naam, ok, extra=""):
+    global fails
+    print(("OK  " if ok else "FAIL"), naam, extra)
+    if not ok:
+        fails += 1
+
+
+def kies(pg, naam):
+    pg.locator(".em-kaart", has_text=naam).first.click()
+    pg.wait_for_timeout(90)
+
+
+with sync_playwright() as p:
+    b = p.chromium.launch(executable_path=B)
+    pg = b.new_context(viewport={"width": 390, "height": 900}).new_page()
+    errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(URL)
+    pg.wait_for_timeout(500)
+
+    check("acht regio's", pg.locator(".em-kaart").count() == 8,
+          "| " + str(pg.locator(".em-kaart").count()))
+    check("geen horizontale scroll", pg.evaluate("document.documentElement.scrollWidth") <= 390)
+    check("leeg briefje legt uit wat te doen", "Kies hierboven" in pg.inner_text("#emBlad"))
+    check("leeg: geen tekst voor de brief", pg.input_value("#emEpic") == "")
+
+    data = pg.evaluate("() => EMLA.regios.map(r => r.zin)")
+    ontbreekt = [z for z in ZINNEN if z not in data]
+    check("zinnen letterlijk van de poster", not ontbreekt, "| anders: " + str(ontbreekt)[:160])
+    check("licentie van de tekeningen blijft staan",
+          pg.evaluate("() => /MIT/.test(ANATOMIE.bron) && !!ANATOMIE.paden.voor.BODY"))
+
+    # Alle vijf de beenregio's tonen nu een aangeleverde foto; alleen de twee
+    # voeten worden nog getekend. Elke foto toont het RECHTERbeen, dus voor links
+    # hoort hij gespiegeld te staan en bij "beide" twee keer. Spiegelen is
+    # makkelijk andersom te krijgen en een gespiegeld briefje is een echte fout,
+    # dus dit wordt per regio en per kant nagemeten.
+    MET_FOTO = ["Voorzijde bovenbeen", "Binnenzijde bovenbeen", "Achterzijde bovenbeen",
+                "Kuitregio", "Voorzijde onderbeen", "Bovenkant van de voet",
+                "Binnenzijde van de voet", "Onderkant van de voet"]
+
+    def spiegelstand():
+        return pg.evaluate("""() => [...document.querySelectorAll('#emBlad .em-tekfoto')]
+            .map(i => i.classList.contains('em-gespiegeld'))""")
+
+    for naam in MET_FOTO:
+        kies(pg, naam)
+        pg.wait_for_timeout(150)
+        check(naam + ": toont de aangeleverde foto, niet de tekening",
+              pg.locator("#emBlad .em-bladregio img.em-tekfoto").count() > 0
+              and pg.locator("#emBlad .em-bladregio svg.em-tek").count() == 0)
+        check(naam + ": beide zijden geeft één beeld, ongespiegeld",
+              spiegelstand() == [False], "| " + str(spiegelstand()))
+        # Zeven foto's tonen de rechterkant, de voetzool de linker. Gespiegeld
+        # hoort dus zodra de gevraagde kant niet de kant van de foto is.
+        kant = pg.evaluate("""(n) => (EMLA.regios.find(r => r.titel === n) || {}).fotoKant""", naam)
+        for knop in ("Rechts", "Links"):
+            verwacht = [knop[0] != kant]
+            pg.locator(".em-kaart", has_text=naam).first.locator(
+                ".em-kant", has_text=knop).click()
+            pg.wait_for_timeout(150)
+            check(naam + ", " + knop.lower() + ": " +
+                  ("ongespiegeld" if verwacht == [False] else "gespiegeld"),
+                  spiegelstand() == verwacht, "| " + str(spiegelstand()))
+        kies(pg, naam)
+        pg.wait_for_timeout(80)
+
+    check("alle acht regio's hebben een meegeleverde foto",
+          pg.evaluate("() => EMLA.regios.filter(r => r.foto).length") == 8,
+          "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.foto).length")))
+    # De vijf beenregio's houden hun anatomische tekening als terugval; de foto
+    # wint. Voor de drie voeten is de tekening helemaal weg: die waren eigen
+    # schetsen en zijn vervangen.
+    check("de drie voeten hebben geen eigen schets meer",
+          pg.evaluate("""() => EMLA.regios
+              .filter(r => r.id.indexOf('voet') === 0 && r.tekening).length""") == 0)
+    check("zeven beelden tonen de rechterkant",
+          pg.evaluate("() => EMLA.regios.filter(r => r.fotoKant === 'R').length") == 7,
+          "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.fotoKant === 'R').length")))
+    # Een zoolaanzicht is het spiegelbeeld van een bovenaanzicht; deze foto toont
+    # daardoor als enige de linkervoet. Gelijktrekken met de rest is een fout.
+    # Harde controle, niet afgeleid uit de data: de zoolfoto toont de linkervoet,
+    # dus bij de keuze "rechts" hoort hij gespiegeld op het briefje te staan en
+    # bij "links" juist niet. Precies andersom dan bij de andere zeven.
+    kies(pg, "Onderkant van de voet")
+    for knop, moet in (("Rechts", True), ("Links", False)):
+        pg.locator(".em-kaart", has_text="Onderkant van de voet").first.locator(
+            ".em-kant", has_text=knop).click()
+        pg.wait_for_timeout(180)
+        check("voetzool, " + knop.lower() + ": " + ("gespiegeld" if moet else "ongespiegeld"),
+              spiegelstand() == [moet], "| " + str(spiegelstand()))
+    kies(pg, "Onderkant van de voet")
+    pg.wait_for_timeout(100)
+
+    check("de voetzool is de enige linkervoet",
+          pg.evaluate("""() => EMLA.regios
+              .filter(r => r.fotoKant === 'L').map(r => r.id)""") == ["voetzool"],
+          "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.fotoKant === 'L').map(r => r.id)")))
+
+    # Vroeger waren de voeten eigen schetsen zonder links/rechts. Sinds de arts
+    # drie eigen voetbeelden aanleverde zijn het foto's van de rechtervoet, net
+    # als de vijf beenfoto's, en spiegelen ze dus mee.
+    check("er is geen eigen schets meer over",
+          pg.evaluate("""() => EMLA.regios
+              .filter(r => r.tekening && r.tekening.soort === 'schets').length""") == 0)
+
+    # kiezen, kant wisselen
+    kies(pg, "Voorzijde bovenbeen")
+    blad = pg.inner_text("#emBlad")
+    check("standaard beide zijden", "beide zijden" in blad)
+    pg.locator(".em-kaart", has_text="Voorzijde bovenbeen").first.locator(".em-kant", has_text="Links").click()
+    pg.wait_for_timeout(200)
+    blad = pg.inner_text("#emBlad")
+    check("kant komt op het briefje", "links" in blad and "beide zijden" not in blad)
+    kies(pg, "Kuitregio")
+    pg.wait_for_timeout(150)
+    check("tweede regio erbij", pg.locator(".em-bladregio").count() == 2)
+    kies(pg, "Kuitregio")  # weer uit
+    pg.wait_for_timeout(150)
+    check("nog eens tikken zet hem weer uit", pg.locator(".em-bladregio").count() == 1)
+
+    # tijd terugrekenen
+    pg.fill("#emTijd", "14:30")
+    pg.wait_for_timeout(250)
+    check("60 minuten eerder", "13:30" in pg.inner_text("#emUitkomst"))
+    check("tijd staat op het briefje", "13:30" in pg.inner_text("#emBlad"))
+    pg.fill("#emTijd", "00:30")
+    pg.wait_for_timeout(250)
+    check("over middernacht heen", "23:30" in pg.inner_text("#emUitkomst"),
+          "| " + pg.inner_text("#emUitkomst"))
+    pg.fill("#emTijd", "")
+    pg.wait_for_timeout(200)
+    check("zonder tijd de algemene regel",
+          "Minimaal 60 minuten" in pg.inner_text("#emBlad") and pg.inner_text("#emUitkomst") == "")
+
+    # tekst voor de brief: moet zonder opmaakschade te plakken zijn
+    for naam in ALLE:
+        if naam not in ("Voorzijde bovenbeen",):   # die staat al aan
+            kies(pg, naam)
+    pg.fill("#emTijd", "09:15")
+    pg.wait_for_timeout(400)
+    t = pg.input_value("#emEpic")
+    check("alles in de tekst", all(z.split(",")[0][:40] for z in ZINNEN) and len(t) > 900,
+          "| " + str(len(t)) + " tekens")
+    check("alleen ASCII", all(ord(c) < 127 for c in t),
+          "| " + str(sorted({c for c in t if ord(c) >= 127})))
+    check("geen tabs", "\t" not in t)
+    check("geen inspringing", not any(r.startswith(" ") for r in t.split("\n")))
+    check("geen regel die een opsomming wordt",
+          not any(r[:2] in ("- ", "* ", "# ", "> ", "+ ") or
+                  (r[:1].isdigit() and r[1:2] in (".", ")"))
+                  for r in t.split("\n")))
+    check("geen spaties aan het regeleind", not any(r != r.rstrip() for r in t.split("\n")))
+    check("geen drie lege regels achter elkaar", "\n\n\n" not in t)
+    check("alle regio's in de tekst", sum(t.count(n) for n in ALLE) >= 7)
+    check("terugrekentijd in de tekst", "08:15" in t, "| " + t.split("\n")[2][:70])
+    check("bron erbij in de tekst voor het dossier", "UMCG Centrum voor Revalidatie" in t)
+
+    # Op het briefje dat de ouder meekrijgt staat juist geen bronvermelding meer.
+    check("geen bronvermelding op het briefje",
+          "naar de poster" not in pg.inner_text("#emBlad").lower()
+          and "umcg" not in pg.inner_text("#emBlad").lower())
+
+    # Geen spiernamen meer op het briefje en niet in de brief; dat was de
+    # uitdrukkelijke wens. Zowel het blad als de Epic-tekst wordt nagelopen.
+    blad_tekst = pg.inner_text("#emBlad").lower()
+    brief = t.lower()
+    gevonden = sorted({w for w in VERBODEN if w in blad_tekst or w in brief})
+    check("geen spiernamen in de patiententekst", not gevonden, "| " + str(gevonden))
+
+    # De posterregel "Verwijder de zalf ... vlak voor de behandeling" is op
+    # aanwijzing van de arts vervangen: de folie blijft om tot aan de
+    # behandeling. Deze toets valt om zodra de oude instructie terugkeert.
+    check("de folie blijft om tot aan de behandeling",
+          "de folie blijft om tot aan de behandeling" in blad_tekst
+          and "de folie blijft om tot aan de behandeling" in brief)
+    check("de oude instructie over verwijderen staat er niet meer",
+          "verwijder de zalf" not in blad_tekst and "verwijder de zalf" not in brief
+          and "overtollige creme" not in brief)
+
+    # leegmaken en herladen laten niets achter
+    pg.click("#emWis")
+    pg.wait_for_timeout(250)
+    check("leegmaken werkt", pg.locator(".em-bladregio").count() == 0 and pg.input_value("#emTijd") == "")
+    kies(pg, "Achterzijde bovenbeen")
+    pg.fill("#emTijd", "11:00")
+    pg.wait_for_timeout(200)
+    opgeslagen = pg.evaluate("() => Object.keys(localStorage).filter(k => /emla/i.test(k))")
+    check("niets in localStorage", opgeslagen == [], "| " + str(opgeslagen))
+    pg.reload()
+    pg.wait_for_timeout(500)
+    check("na herladen leeg", pg.locator(".em-bladregio").count() == 0)
+    pg.close()
+
+    # printweergave: alleen het briefje, en het past op één A4
+    # Een heel A4 is bij 96 dpi 794 x 1123 px; de witrand zit in de pagina zelf.
+    pg = b.new_context(viewport={"width": 794, "height": 1123}).new_page()
+    pg.goto(URL)
+    pg.wait_for_timeout(400)
+    for naam in ALLE:
+        kies(pg, naam)
+    # het zwaarste geval: alles aangevinkt én een tijd ingevuld.
+    # De witrand zit sinds krn-v82 als padding in de pagina en niet meer in
+    # @page (anders drukt de browser zijn eigen koptekst met de URL mee), dus
+    # de hele body is de maat: een A4 is 1123 px bij 96 dpi.
+    pg.fill("#emTijd", "14:30")
+    pg.wait_for_timeout(300)
+    pg.emulate_media(media="print")
+    pg.wait_for_timeout(200)
+    hoogte = pg.evaluate("document.body.scrollHeight")
+    check("acht regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
+
+    # De foto's worden groter naarmate er minder regio's op het briefje staan.
+    # Elk aantal moet op één A4 blijven passen; dat wordt hier allemaal gemeten.
+    for aantal in (1, 2, 3, 4, 5, 6, 7, 8):
+        pg2 = b.new_context(viewport={"width": 794, "height": 1123}).new_page()
+        pg2.goto(URL)
+        pg2.wait_for_timeout(450)
+        for naam in ALLE[:aantal]:
+            pg2.locator(".em-kaart", has_text=naam).first.click()
+            pg2.wait_for_timeout(70)
+        pg2.fill("#emTijd", "14:30")
+        pg2.wait_for_timeout(350)
+        pg2.emulate_media(media="print")
+        pg2.wait_for_timeout(200)
+        h = pg2.evaluate("document.body.scrollHeight")
+        fh = pg2.evaluate("""() => getComputedStyle(document.getElementById('emBlad'))
+            .getPropertyValue('--fotohoog').trim()""")
+        check(str(aantal) + " regio's passen op één A4 (foto " + fh + ")", h <= 1123,
+              "| " + str(h) + " px")
+        pg2.close()
+    # De binnenzijde van de voet is een liggend beeld; zonder breedtegrens duwt
+    # het de tekst ernaast in een smalle strook.
+    breedtes = pg.evaluate("""() => [...document.querySelectorAll('#emBlad .em-tekfoto')]
+        .map(i => i.getBoundingClientRect().width)""")
+    check("geen enkel beeld wordt breder dan de ruimte toelaat",
+          breedtes and max(breedtes) <= 120, "| " + str([round(x) for x in breedtes]))
+
+    check("app-onderdelen staan niet op papier",
+          not pg.locator(".topbar").is_visible()
+          and not pg.locator("#emRaster").is_visible()
+          and not pg.locator("#emEpic").is_visible())
+    check("het briefje staat er wel op", pg.locator("#emBlad").is_visible())
+    pg.close()
+
+    # ---- eigen foto met markeervlak ----
+    # De foto blijft op het toestel; de test controleert dat hij opgeslagen
+    # wordt, het vlak meegaat, en alles een herlaadbeurt overleeft.
+    ctx = b.new_context(viewport={"width": 420, "height": 900})
+    pg = ctx.new_page()
+    errs2 = []
+    pg.on("pageerror", lambda e: errs2.append(str(e)))
+    buiten = []
+    pg.on("request", lambda r: buiten.append(r.url) if "localhost:9053" not in r.url else None)
+    pg.goto(URL)
+    pg.wait_for_timeout(600)
+
+    kies(pg, "Binnenzijde van de voet")
+    pg.wait_for_timeout(150)
+    check("knop voor een eigen foto", pg.locator(".em-fotoknop").count() == 1)
+
+    plaatje = pg.evaluate("""() => { const c = document.createElement('canvas');
+      c.width = 900; c.height = 600; const x = c.getContext('2d');
+      x.fillStyle = '#E8C9A0'; x.fillRect(0, 0, 900, 600);
+      x.fillStyle = '#BE8C60'; x.beginPath(); x.ellipse(450, 320, 330, 150, 0, 0, 7); x.fill();
+      return c.toDataURL('image/jpeg', 0.85); }""")
+    rauw = base64.b64decode(plaatje.split(",", 1)[1])
+    with pg.expect_file_chooser() as fc:
+        pg.locator(".em-fotoknop").first.click()
+    fc.value.set_files({"name": "voet.jpg", "mimeType": "image/jpeg", "buffer": rauw})
+    pg.wait_for_timeout(1800)
+
+    check("markeerscherm gaat open", not pg.locator("#emMarkeer").is_hidden())
+    check("foto staat op het briefje", pg.locator("#emBlad .em-bfoto img").count() == 1)
+    check("foto vervangt de tekening", pg.locator("#emBlad .em-bladregio svg.em-tek").count() == 0)
+
+    pg.locator("#emDoek").scroll_into_view_if_needed()
+    pg.wait_for_timeout(200)
+    bb = pg.locator("#emDoek").bounding_box()
+    pg.mouse.move(bb["x"] + bb["width"] * 0.30, bb["y"] + bb["height"] * 0.66)
+    pg.mouse.down()
+    pg.mouse.move(bb["x"] + bb["width"] * 0.38, bb["y"] + bb["height"] * 0.62)
+    pg.mouse.up()
+    for sel, waarde in (("#emBreed", "40"), ("#emHoog", "12"), ("#emHoek", "-15")):
+        pg.fill(sel, waarde)
+        pg.dispatch_event(sel, "input")
+    pg.wait_for_timeout(800)
+
+    vlek = pg.evaluate("""async () => {
+      const db = await new Promise(r => { const q = indexedDB.open('krnFotos'); q.onsuccess = () => r(q.result); });
+      return await new Promise(r => {
+        const t = db.transaction('fotos', 'readonly').objectStore('fotos').getAll();
+        t.onsuccess = () => r(t.result.map(x => ({ cat: x.catId, vlek: x.vlek })));
+      });
+    }""")
+    check("foto bewaard onder een eigen sleutel",
+          len(vlek) == 1 and vlek[0]["cat"] == "emla:voetmediaal", "| " + str(vlek)[:90])
+    v = vlek[0]["vlek"] if vlek else {}
+    check("slepen verzet het vlak", v and abs(v["cx"] - 0.5) > 0.05 and abs(v["cy"] - 0.5) > 0.05,
+          "| " + str(v))
+    check("schuiven worden bewaard",
+          v and round(v["rx"], 2) == 0.4 and round(v["ry"], 2) == 0.12 and v["hoek"] == -15,
+          "| " + str(v))
+
+    pg.reload()
+    pg.wait_for_timeout(1800)
+    kies(pg, "Binnenzijde van de voet")
+    pg.wait_for_timeout(600)
+    check("foto overleeft herladen", pg.locator("#emBlad .em-bfoto img").count() == 1)
+    check("knop zegt nu bijstellen", pg.locator(".em-fotoknop.heeft").count() == 1)
+
+    pg.locator(".em-fotoknop").first.click()
+    pg.wait_for_timeout(400)
+    pg.click("#emFotoWeg")
+    pg.wait_for_timeout(900)
+    # Deze regio had vroeger een eigen schets als terugval; nu is dat de
+    # meegeleverde foto van de arts. De hele keten wordt hier nagelopen.
+    check("foto weghalen zet de meegeleverde foto terug",
+          pg.locator("#emBlad .em-bfoto img").count() == 0
+          and pg.locator(
+              '#emBlad .em-bladregio img.em-tekfoto[src*="smeer-voet-binnen"]').count() == 1)
+
+    check("de pagina haalt niets van buiten", not buiten, "| " + str(buiten)[:120])
+    pg.close()
+
+    print("\nfails:", fails, "| errors:", errs + errs2)
+    b.close()

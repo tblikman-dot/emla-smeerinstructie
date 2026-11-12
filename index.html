@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Emla-smeerinstructie</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Emla">
+<link rel="stylesheet" href="style.css">
+<style>
+  body { background: var(--papier); }
+
+  .em-wrap { max-width: 820px; margin: 0 auto; padding: 18px 16px 60px; }
+
+  .em-terug {
+    display: inline-block;
+    font-family: system-ui, sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--accent); text-decoration: none;
+    margin-bottom: 12px;
+  }
+  .em-terug:hover { text-decoration: underline; }
+
+  .em-kop { font-size: 1.45rem; margin: 0 0 6px; }
+  .em-intro {
+    font-family: system-ui, sans-serif;
+    font-size: 13.5px; color: var(--muted);
+    line-height: 1.65; margin: 0 0 14px;
+  }
+
+  .em-vlag {
+    font-family: system-ui, sans-serif;
+    font-size: 12.5px; line-height: 1.6;
+    border-radius: 11px; padding: 10px 13px;
+    margin: 0 0 16px;
+    background: #FBF3DC; color: #6B4E06;
+  }
+  .em-vlag strong { display: block; margin-bottom: 2px; }
+
+  .em-sectie { margin-top: 26px; }
+  .em-sectie h2 { font-size: 1.1rem; margin: 0 0 3px; }
+  .em-sectie .uitleg {
+    font-family: system-ui, sans-serif;
+    font-size: 13px; color: var(--muted);
+    line-height: 1.6; margin: 0 0 12px;
+  }
+
+  /* ---- regio's kiezen ---- */
+  .em-raster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
+    gap: 9px;
+  }
+  .em-kaart {
+    background: var(--paneel);
+    border: 1.5px solid var(--lijn);
+    border-radius: 13px;
+    padding: 9px 10px 10px;
+    font-family: system-ui, sans-serif;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .em-kaart.aan { border-color: var(--accent); background: var(--accent-zacht); }
+  .em-kaart-top { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  /* hoogte vast, breedte volgt de verhouding van de tekening zelf */
+  .em-kaart svg.em-tek { height: 46px; width: auto; max-width: 56px; flex: none; }
+  .em-kaart .em-tekfoto {
+    height: 106px; width: auto; flex: none; display: block;
+    max-width: 100%; object-fit: contain;
+  }
+  .em-gespiegeld { transform: scaleX(-1); }
+  .em-tweefoto { display: flex; gap: 3px; flex: none; }
+  .em-kaart svg.em-tek.em-breed { height: 30px; max-width: 62px; }
+  /* zonder min-width:0 krimpt deze kolom niet mee en loopt een lange
+     omschrijving buiten het scherm */
+  .em-kaart-tekst { min-width: 0; }
+  .em-kaart .em-naam,
+  .em-kaart .em-sub { display: block; overflow-wrap: break-word; }
+  .em-kaart .em-naam { font-size: 13px; font-weight: 700; line-height: 1.25; }
+  .em-kaart .em-arts {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px; line-height: 1.4;
+    color: var(--accent);
+  }
+  .em-kaart .em-sub { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+
+  /* ---- eigen foto per regio ---- */
+  .em-fotoknop {
+    margin-top: 5px;
+    width: 100%;
+    border: 1px dashed var(--lijn);
+    background: none;
+    border-radius: 7px;
+    padding: 5px 2px;
+    font-family: system-ui, sans-serif;
+    font-size: 11.5px; font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .em-fotoknop:hover { border-color: var(--accent); color: var(--accent); }
+  .em-fotoknop.heeft { border-style: solid; border-color: var(--accent); color: var(--accent); }
+
+  .em-markeer {
+    margin-top: 12px;
+    border: 1.5px solid var(--accent);
+    border-radius: 13px;
+    padding: 12px 13px 14px;
+    background: var(--paneel);
+  }
+  .em-markeer[hidden] { display: none; }
+  .em-markeer h3 { font-size: 14px; margin: 0 0 2px; font-family: system-ui, sans-serif; }
+  .em-markeer .uitleg { margin-bottom: 10px; }
+
+  .em-doek {
+    position: relative;
+    max-width: 340px;
+    margin: 0 auto 10px;
+    touch-action: none;           /* anders scrollt de pagina tijdens slepen */
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+  }
+  .em-doek img { display: block; width: 100%; border-radius: 9px; }
+  .em-doek svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+
+  .em-schuif {
+    display: flex; align-items: center; gap: 9px;
+    font-family: system-ui, sans-serif; font-size: 12.5px; color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .em-schuif span { width: 66px; flex: none; }
+  .em-schuif input { flex: 1; }
+
+  .em-kanten { display: flex; gap: 4px; margin-top: 7px; }
+  .em-kant {
+    flex: 1;
+    border: 1px solid var(--lijn);
+    background: var(--paneel);
+    border-radius: 7px;
+    padding: 5px 2px;
+    font-family: system-ui, sans-serif;
+    font-size: 11.5px; font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .em-kant.aan { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ---- tijd ---- */
+  .em-tijdrij { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .em-tijdrij input {
+    padding: 9px 11px;
+    border: 1.5px solid var(--lijn);
+    border-radius: 10px;
+    font-family: system-ui, sans-serif;
+    font-size: 15px;
+    background: var(--paneel);
+    color: var(--inkt);
+  }
+  .em-tijdrij input:focus { outline: none; border-color: var(--accent); }
+  .em-uitkomst {
+    font-family: system-ui, sans-serif;
+    font-size: 13.5px; font-weight: 700; color: var(--accent);
+  }
+
+  .em-knop {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 11px;
+    background: var(--accent);
+    color: #fff;
+    font-family: system-ui, sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+  }
+  .em-knop.rustig {
+    background: var(--paneel);
+    color: var(--inkt);
+    border: 1.5px solid var(--lijn);
+  }
+  .em-knop:active { transform: scale(0.98); }
+  .em-knoprij { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  /* ---- het briefje ---- */
+  .em-blad {
+    background: #fff;
+    border: 1px solid var(--lijn);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(15,39,51,0.07);
+    padding: 22px 24px 26px;
+    font-family: system-ui, sans-serif;
+    color: var(--inkt);
+  }
+  .em-blad h1 { font-family: 'Georgia', serif; font-size: 1.45rem; margin: 0 0 2px; }
+  .em-blad .em-bladsub { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+
+  .em-wanneer {
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 13px;
+    margin-bottom: 16px;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .em-wanneer b { font-size: 17px; }
+
+  .em-bladkop {
+    font-size: 11.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--accent);
+    margin: 18px 0 8px;
+    border-bottom: 1px solid var(--lijn);
+    padding-bottom: 3px;
+  }
+
+  .em-bladregios {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .em-bladregio {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .em-bladregio svg.em-tek { height: 64px; width: auto; max-width: 74px; flex: none; }
+  /* Breedte begrensd: de binnenzijde van de voet is een liggend beeld en zou
+     anders de tekst ernaast in een smalle strook duwen. object-fit houdt het
+     beeld onvervormd binnen dat vak. */
+  .em-bladregio .em-tekfoto {
+    height: var(--fotohoog, 142px); width: auto; flex: none;
+    max-width: 118px; object-fit: contain;
+  }
+  .em-bladregio svg.em-tek.em-breed { height: 42px; max-width: 84px; }
+
+  /* eigen foto op het briefje, met het vlak eroverheen */
+  .em-bfoto.em-kfoto { width: 58px; border-radius: 6px; overflow: hidden; }
+  .em-bfoto { position: relative; flex: none; width: 74px; line-height: 0; }
+  .em-bfoto img { width: 100%; border-radius: 5px; display: block; }
+  .em-bfoto svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .em-bladregio .em-bnaam { font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+  .em-bladregio .em-bkant {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    vertical-align: 1px;
+  }
+  /* voorzijde of achterzijde staat niet in de tekening, wel hier */
+  .em-bladregio .em-bsub { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+  .em-bladregio .em-bzin { font-size: 12.5px; line-height: 1.45; margin-top: 3px; }
+  .em-vink {
+    width: 15px; height: 15px; flex: none;
+    border: 1.5px solid var(--inkt);
+    border-radius: 3px;
+    margin-top: 2px;
+  }
+
+  .em-bladlijst { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; }
+  .em-bladlijst li { margin-bottom: 3px; }
+
+  .em-onder {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 14px;
+  }
+  .em-onder > div:first-child { flex: 1; }
+  .em-dikte { flex: none; width: 190px; }
+  .em-dikte svg { width: 100%; height: auto; }
+  .em-diktekop {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--accent); margin-bottom: 2px;
+  }
+
+  /* herkomst van tekst en tekeningen: hoort bij de app, niet bij het briefje */
+  .em-herkomst {
+    font-family: system-ui, sans-serif;
+    font-size: 11.5px; line-height: 1.6;
+    color: var(--muted);
+    border-top: 1px solid var(--lijn);
+    margin: 28px 0 0; padding-top: 10px;
+  }
+
+  .em-bron {
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid var(--lijn);
+    font-size: 10.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .em-leeg {
+    font-family: system-ui, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    padding: 18px 2px;
+  }
+
+  /* tekeningen — de lijndikte mag niet meeschalen, anders is hij op een
+     duimnagel onzichtbaar en op de afdruk een balk */
+  .em-tek .em-huid,
+  .em-tek .em-zone,
+  .em-tek .em-lijn,
+  .em-tek .em-lijn2 { vector-effect: non-scaling-stroke; }
+  /* het vlak over een foto staat in fotopixels; zonder dit is de rand ~1/900
+     beeldbreedte en dus onzichtbaar */
+  .em-doek .em-zone,
+  .em-bfoto .em-zone { vector-effect: non-scaling-stroke; stroke-width: 1.5; }
+  .em-huid { fill: #F5E2D7; stroke: #C9A595; stroke-width: 1; }
+  .em-zone { fill: #9BAED6; fill-opacity: 0.72; stroke: #3B5EA6; stroke-width: 1; }
+  .em-flauw { fill: #EBD3C6; stroke: none; }
+  .em-lijn { fill: none; stroke: #C79E8B; stroke-width: 1; }
+  .em-lijn2 { fill: none; stroke: #D7B4A2; stroke-width: 1; }
+  .em-folie { fill: none; stroke: #7FA6B8; stroke-width: 2; stroke-dasharray: 5 4; }
+  .em-creme { fill: #E9EEF6; stroke: #3B5EA6; stroke-width: 1.5; }
+  .em-huidlaag { fill: #F5E2D7; stroke: #D7B4A2; stroke-width: 1.5; }
+  .em-pleister { stroke: #B98C6B; stroke-width: 3; stroke-linecap: round; }
+  .em-maat { stroke: #3B5EA6; stroke-width: 1.2; }
+  .em-maattekst { font-family: system-ui, sans-serif; font-size: 9px; fill: #4A5560; }
+
+  /* ---- tekst voor de brief ---- */
+  .em-epic {
+    width: 100%;
+    min-height: 230px;
+    padding: 12px 13px;
+    border: 1.5px solid var(--lijn);
+    border-radius: 11px;
+    background: var(--paneel);
+    color: var(--inkt);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+    resize: vertical;
+  }
+  .em-epic:focus { outline: none; border-color: var(--accent); }
+
+  @media (max-width: 560px) {
+    .em-bladregios { grid-template-columns: 1fr; }
+    .em-onder { flex-direction: column; }
+    .em-dikte { width: 100%; max-width: 260px; }
+    .em-blad { padding: 16px 15px 20px; }
+  }
+
+  /* ---- printen: alleen het briefje ---- */
+  @media print {
+    /* Marge 0 op de pagina zelf, en de witrand als padding eromheen. Dat is
+       niet alleen opmaak: zonder margeruimte heeft de browser geen plek voor
+       zijn eigen koptekst en voettekst, en dan blijft de URL van de site van
+       de afdruk. */
+    @page { size: A4 portrait; margin: 0; }
+    .offline-balk, .topbar, .em-nietprint { display: none !important; }
+    body { background: #fff; }
+    .em-wrap { max-width: none; padding: 12mm; }
+    .em-blad { border: none; box-shadow: none; border-radius: 0; padding: 0; }
+    /* zonder dit laat de browser gekleurde vlakken weg bij het printen: dan
+       staat er een foto zonder markering en een kant zonder kleur op papier */
+    .em-blad, .em-blad * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .em-bladregio { break-inside: avoid; page-break-inside: avoid; }
+    /* krapper, zodat ook het zwaarste geval — alle acht de regio's én een
+       ingevulde tijd — op één vel past; dat scheelt een losse tweede pagina */
+    .em-wanneer { margin-bottom: 9px; padding: 7px 12px; }
+    .em-bladkop { margin: 10px 0 5px; }
+    .em-bladregios { gap: 8px; }
+    /* de foto's zijn 20% groter; die hoogte wordt hier teruggehaald bij de twee
+       opsommingen, zodat het briefje op één vel blijft passen */
+    .em-bladlijst { font-size: 11.5px; line-height: 1.45; }
+    .em-bron { font-size: 10px; }
+    .em-bladregio svg.em-tek { height: 54px; }
+    .em-bladregio .em-tekfoto { height: var(--fotohoog, 130px); }
+    .em-bladregio svg.em-tek.em-breed { height: 36px; }
+    .em-bfoto { width: 66px; }
+    .em-bladlijst li { margin-bottom: 1px; }
+    .em-bron { margin-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="offline-balk em-nietprint">Geen internet — deze pagina werkt gewoon door.</div>
+
+<header class="topbar em-nietprint">
+  <div class="topbar-title">Emla-smeerinstructie</div>
+</header>
+
+<div class="em-wrap">
+  <div class="em-nietprint">
+
+    <h1 class="em-kop">Emla-smeerinstructie om mee te geven</h1>
+    <p class="em-intro">
+      Vink aan welke regio's ingesmeerd moeten worden; daaronder staat een briefje dat je kunt
+      printen of als pdf kunt bewaren, en een tekstblok voor de brief in het dossier.
+      De regio's en de instructies komen van de poster van het Centrum voor Revalidatie.
+    </p>
+
+    <div class="em-vlag">
+      <strong>Geen patiëntgegevens invullen</strong>
+      Deze pagina staat op een openbare site. Vul hier geen naam, geboortedatum of
+      patiëntnummer in. Wat je hier invult wordt nergens bewaard en nergens heen gestuurd —
+      bij het herladen van de pagina is het weg.
+    </div>
+
+    <section class="em-sectie">
+      <h2>1. Welke regio's?</h2>
+      <p class="uitleg">
+        Tik een regio aan en kies daarna de kant. De poster zelf maakt dat onderscheid niet;
+        dat staat hier omdat er vaak aan één kant geïnjecteerd wordt.
+      </p>
+      <div class="em-raster" id="emRaster"></div>
+      <input type="file" id="emFotoInput" accept="image/*" hidden>
+
+      <div class="em-markeer" id="emMarkeer" hidden>
+        <h3 id="emMarkeerKop"></h3>
+        <p class="uitleg">
+          Sleep over de foto om het vlak te verplaatsen; met de schuiven maak je het groter,
+          kleiner of gedraaid. Het vlak komt zo ook op het briefje te staan.
+        </p>
+        <div class="em-doek" id="emDoek"></div>
+        <div class="em-schuif"><span>Breedte</span><input type="range" id="emBreed" min="3" max="50"></div>
+        <div class="em-schuif"><span>Hoogte</span><input type="range" id="emHoog" min="3" max="50"></div>
+        <div class="em-schuif"><span>Draaien</span><input type="range" id="emHoek" min="-90" max="90"></div>
+        <div class="em-knoprij" style="margin:10px 0 0">
+          <button class="em-knop" id="emMarkeerKlaar">Klaar</button>
+          <button class="em-knop rustig" id="emFotoWeg">Foto weghalen</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="em-sectie">
+      <h2>2. Hoe laat is de afspraak?</h2>
+      <p class="uitleg">
+        Mag leeg blijven. Vul je hem in, dan staat op het briefje hoe laat de crème er
+        uiterlijk op moet — 60 minuten eerder.
+      </p>
+      <div class="em-tijdrij">
+        <input type="time" id="emTijd" step="300" aria-label="Tijd van de afspraak">
+        <span class="em-uitkomst" id="emUitkomst"></span>
+      </div>
+    </section>
+
+    <section class="em-sectie">
+      <h2>3. Het briefje</h2>
+      <p class="uitleg">
+        Zo komt het op papier. Printen kan ook naar pdf — dan kun je het als bijlage meegeven.
+      </p>
+      <div class="em-knoprij">
+        <button class="em-knop" id="emPrint">🖨️ Printen of opslaan als pdf</button>
+        <button class="em-knop rustig" id="emWis">Alles leegmaken</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="em-blad" id="emBlad"></div>
+
+  <div class="em-nietprint">
+    <section class="em-sectie">
+      <h2>4. Tekst voor de brief</h2>
+      <p class="uitleg">
+        Dezelfde instructie als platte tekst, zonder tekens die in een dossiereditor opmaak
+        veroorzaken. Plakken kan rechtstreeks in de brief of de notitie.
+      </p>
+      <div class="em-knoprij">
+        <button class="em-knop" id="emKopieer">Kopiëren</button>
+        <span class="em-uitkomst" id="emKopieStatus"></span>
+      </div>
+      <textarea class="em-epic" id="emEpic" spellcheck="false" readonly></textarea>
+    </section>
+
+    <p class="em-herkomst" id="emHerkomst"></p>
+  </div>
+</div>
+
+<script src="epictekst.js"></script>
+<script src="anatomie-data.js"></script>
+<script src="emla-data.js"></script>
+<script src="fotos.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var KANTEN = [
+    { code: 'L',  kort: 'Links',  lang: 'links' },
+    { code: 'R',  kort: 'Rechts', lang: 'rechts' },
+    { code: 'LR', kort: 'Beide',  lang: 'beide zijden' },
+  ];
+
+  // Niets hiervan wordt bewaard: geen localStorage, geen URL. Bij herladen weg.
+  var keuze = {};   // { regioId: 'L' | 'R' | 'LR' }
+
+  var elRaster = document.getElementById('emRaster');
+  var elBlad = document.getElementById('emBlad');
+  var elEpic = document.getElementById('emEpic');
+  var elTijd = document.getElementById('emTijd');
+  var elUitkomst = document.getElementById('emUitkomst');
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function kantWoord(code) {
+    for (var i = 0; i < KANTEN.length; i++) if (KANTEN[i].code === code) return KANTEN[i].lang;
+    return '';
+  }
+
+  function gekozen() {
+    return EMLA.regios.filter(function (r) { return keuze[r.id]; });
+  }
+
+  // ---------------- tekeningen ----------------
+  //
+  // _LEFT en _RIGHT in anatomie-data.js zijn de linker- en rechterkant van de
+  // AFBEELDING. Bij een vooraanzicht kijk je de patiënt aan, dus zijn linkerbeen
+  // staat rechts in beeld; bij een achteraanzicht staat links gewoon links.
+  // Een gespiegeld briefje is een echte fout, dus dit staat op één plek en er
+  // zit een test op.
+  function beeldZijden(kant, aanzicht) {
+    var voor = (aanzicht === 'voor');
+    var uit = [];
+    if (kant === 'L' || kant === 'LR') uit.push(voor ? 'RIGHT' : 'LEFT');
+    if (kant === 'R' || kant === 'LR') uit.push(voor ? 'LEFT' : 'RIGHT');
+    return uit;
+  }
+
+  var tekenTeller = 0;
+
+  function tekenRegio(regio, kant) {
+    var t = regio.tekening;
+
+    // de voeten zijn een eigen schets; daar zit geen links/rechts in.
+    // Het vlak wordt afgeknipt tot de omtrek, zodat het nooit buiten de voet valt.
+    if (t.soort === 'schets') {
+      var sch = t.schets;
+      var sid = 'emvoet' + (++tekenTeller);
+      return '<svg class="em-tek' + (sch.breed ? ' em-breed' : '') + '" viewBox="' + sch.box +
+        '" role="img" aria-hidden="true">' +
+        '<defs><clipPath id="' + sid + '"><path d="' + sch.omtrek + '"/></clipPath></defs>' +
+        '<path class="em-huid" d="' + sch.omtrek + '"/>' +
+        (sch.extra || '') +
+        '<g clip-path="url(#' + sid + ')">' + sch.zone + '</g>' +
+        '</svg>';
+    }
+
+    var P = ANATOMIE.paden[t.aanzicht];
+    var zijden = beeldZijden(kant || 'LR', t.aanzicht);
+    var n = ++tekenTeller;
+    var defs = [];
+    var inhoud = ['<path class="em-huid" d="' + P.BODY + '"/>'];
+
+    (t.flauw || []).forEach(function (naam) {
+      if (P[naam]) inhoud.push('<path class="em-flauw" d="' + P[naam] + '"/>');
+    });
+
+    zijden.forEach(function (zijde) {
+      if (t.soort === 'spier') {
+        (t.paden || []).forEach(function (p) {
+          var d = P[p.replace('%', zijde)];
+          if (d) inhoud.push('<path class="em-zone" d="' + d + '"/>');
+        });
+        return;
+      }
+      // spierband of lichaamsband: een rechthoek, afgeknipt tot de spier of
+      // tot de omtrek van het been. Zo blijft het vlak binnen het been.
+      var knipPad = (t.soort === 'spierband') ? P[t.pad.replace('%', zijde)] : P.BODY;
+      var b = t.band[zijde];
+      if (!knipPad || !b) return;
+      var id = 'emknip' + n + zijde;
+      defs.push('<clipPath id="' + id + '"><path d="' + knipPad + '"/></clipPath>');
+      inhoud.push('<g clip-path="url(#' + id + ')"><rect class="em-zone" x="' + b[0] +
+        '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '"/></g>');
+
+      (t.bij || []).forEach(function (p) {
+        var d = P[p.replace('%', zijde)];
+        if (d) inhoud.push('<path class="em-zone" d="' + d + '"/>');
+      });
+    });
+
+    return '<svg class="em-tek" viewBox="' + t.box + '" role="img" aria-hidden="true">' +
+      '<defs>' + defs.join('') + '</defs>' + inhoud.join('') + '</svg>';
+  }
+
+  // 60 minuten eerder. Over middernacht heen telt gewoon door naar de vorige dag.
+  function zestigEerder(hhmm) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || '');
+    if (!m) return null;
+    var u = parseInt(m[1], 10), min = parseInt(m[2], 10);
+    if (u > 23 || min > 59) return null;
+    var tot = ((u * 60 + min) - 60 + 1440) % 1440;
+    return ('0' + Math.floor(tot / 60)).slice(-2) + ':' + ('0' + (tot % 60)).slice(-2);
+  }
+
+  // ---------------- eigen foto per regio ----------------
+  //
+  // De foto blijft op dit toestel. Hij gaat in dezelfde IndexedDB als de
+  // boekpagina's (fotos.js), onder een eigen sleutel per regio, en komt daardoor
+  // ook mee in de back-up. Er wordt niets verstuurd en niets gepubliceerd.
+  var FOTO_SLEUTEL = 'emla:';
+  var fotos = {};              // { regioId: {id, url, breedte, hoogte, vlek} }
+  var markeerRegio = null;
+  var vlekTimer = null;
+
+  function standaardVlek() { return { cx: 0.5, cy: 0.5, rx: 0.28, ry: 0.16, hoek: 0 }; }
+
+  function heeftOpslag() {
+    return typeof verwerkFoto === 'function' && !!window.indexedDB;
+  }
+
+  function laadFotos() {
+    if (!heeftOpslag()) return Promise.resolve();
+    return Promise.all(EMLA.regios.map(function (r) {
+      var rijen = fotosVan(FOTO_SLEUTEL + r.id);
+      if (!rijen.length) return null;
+      var rij = rijen[rijen.length - 1];
+      return haalFoto(rij.id).then(function (rec) {
+        if (!rec || !rec.blob) return;
+        if (fotos[r.id] && fotos[r.id].url) URL.revokeObjectURL(fotos[r.id].url);
+        fotos[r.id] = {
+          id: rij.id,
+          url: URL.createObjectURL(rec.blob),
+          breedte: rec.breedte || 1000,
+          hoogte: rec.hoogte || 1000,
+          vlek: rec.vlek || standaardVlek(),
+        };
+      }).catch(function () {});
+    }));
+  }
+
+  // Het vlak staat als breuken van de foto opgeslagen, dus het klopt op elk
+  // formaat: op het scherm, op de duimnagel en op de afdruk.
+  function vlekSvg(f) {
+    var v = f.vlek, b = f.breedte, h = f.hoogte;
+    var cx = v.cx * b, cy = v.cy * h;
+    return '<svg viewBox="0 0 ' + b + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">' +
+      '<ellipse class="em-zone" cx="' + cx + '" cy="' + cy + '" rx="' + (v.rx * b) +
+      '" ry="' + (v.ry * h) + '" transform="rotate(' + (v.hoek || 0) + ' ' + cx + ' ' + cy + ')"/>' +
+      '</svg>';
+  }
+
+  function fotoBlok(regioId, klasse) {
+    var f = fotos[regioId];
+    return '<div class="' + klasse + '"><img src="' + f.url + '" alt="">' + vlekSvg(f) + '</div>';
+  }
+
+  // Volgorde: een eigen foto van dit toestel wint, daarna de foto die bij de
+  // app wordt meegeleverd, en anders de tekening. Op een meegeleverde foto zit
+  // het paarse vlak al.
+  //
+  // Staat erbij welk been op de foto staat (fotoKant), dan wordt hij voor de
+  // andere kant gespiegeld en bij "beide" twee keer getoond. Zonder fotoKant
+  // blijft het één beeld en staat de kant alleen in de tekst.
+  function fotoBeeld(regio, spiegel, watVoorKant) {
+    return '<img class="em-tekfoto' + (spiegel ? ' em-gespiegeld' : '') + '" src="' +
+      regio.foto + '" alt="' + esc(regio.titel + (watVoorKant ? ', ' + watVoorKant : '') +
+      ': het gekleurde vlak laat zien waar de crème moet komen.') + '">';
+  }
+
+  function beeldVan(regio, kant, klasse) {
+    if (fotos[regio.id]) return fotoBlok(regio.id, klasse);
+
+    if (regio.foto) {
+      if (!regio.fotoKant) return fotoBeeld(regio, false, '');
+      // Eén been per regio, niet twee naast elkaar: dat geeft de foto de volle
+      // breedte en daarmee de dubbele grootte. Welke kant het is staat in het
+      // label ernaast; bij "beide" staat het been zoals het is aangeleverd.
+      var k = kant || 'LR';
+      if (k === 'LR') return fotoBeeld(regio, false, 'beide zijden');
+      // spiegelen zodra de gevraagde kant niet de kant van de foto is
+      var spiegel = (k !== regio.fotoKant);
+      return fotoBeeld(regio, spiegel, k === 'L' ? 'links' : 'rechts');
+    }
+
+    return tekenRegio(regio, kant);
+  }
+
+  var elDoek = document.getElementById('emDoek');
+  var elMarkeer = document.getElementById('emMarkeer');
+  var elFotoInput = document.getElementById('emFotoInput');
+  var schuiven = {
+    rx: document.getElementById('emBreed'),
+    ry: document.getElementById('emHoog'),
+    hoek: document.getElementById('emHoek'),
+  };
+
+  function openMarkeer(regioId) {
+    var f = fotos[regioId];
+    if (!f) return;
+    markeerRegio = regioId;
+    var regio = EMLA.regios.filter(function (r) { return r.id === regioId; })[0];
+    document.getElementById('emMarkeerKop').textContent = 'Foto bij ' + regio.titel;
+    elDoek.innerHTML = '<img src="' + f.url + '" alt="">' + vlekSvg(f);
+    schuiven.rx.value = Math.round(f.vlek.rx * 100);
+    schuiven.ry.value = Math.round(f.vlek.ry * 100);
+    schuiven.hoek.value = Math.round(f.vlek.hoek || 0);
+    elMarkeer.hidden = false;
+  }
+
+  function vernieuwDoek() {
+    var f = fotos[markeerRegio];
+    var el = elDoek.querySelector('ellipse');
+    if (!f || !el) return;
+    var cx = f.vlek.cx * f.breedte, cy = f.vlek.cy * f.hoogte;
+    el.setAttribute('cx', cx);
+    el.setAttribute('cy', cy);
+    el.setAttribute('rx', f.vlek.rx * f.breedte);
+    el.setAttribute('ry', f.vlek.ry * f.hoogte);
+    el.setAttribute('transform', 'rotate(' + (f.vlek.hoek || 0) + ' ' + cx + ' ' + cy + ')');
+  }
+
+  function bewaarVlek() {
+    clearTimeout(vlekTimer);
+    var regioId = markeerRegio;
+    vlekTimer = setTimeout(function () {
+      var f = fotos[regioId];
+      if (!f || !heeftOpslag()) return;
+      haalFoto(f.id).then(function (rec) {
+        if (!rec) return;
+        rec.vlek = f.vlek;
+        return fotoTransactie('readwrite').then(function (store) {
+          return alsBelofte(store.put(rec));
+        });
+      }).catch(function () {});
+    }, 300);
+  }
+
+  function sleep(e) {
+    var f = fotos[markeerRegio];
+    if (!f) return;
+    var r = elDoek.getBoundingClientRect();
+    f.vlek.cx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    f.vlek.cy = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    vernieuwDoek();
+    bewaarVlek();
+  }
+
+  elDoek.addEventListener('pointerdown', function (e) {
+    if (!markeerRegio) return;
+    elDoek.setPointerCapture(e.pointerId);
+    sleep(e);
+  });
+  elDoek.addEventListener('pointermove', function (e) {
+    if (e.buttons) sleep(e);
+  });
+
+  Object.keys(schuiven).forEach(function (naam) {
+    schuiven[naam].addEventListener('input', function () {
+      var f = fotos[markeerRegio];
+      if (!f) return;
+      var w = parseFloat(this.value);
+      f.vlek[naam] = (naam === 'hoek') ? w : w / 100;
+      vernieuwDoek();
+      bewaarVlek();
+      herteken();
+    });
+  });
+
+  document.getElementById('emMarkeerKlaar').addEventListener('click', function () {
+    elMarkeer.hidden = true;
+    markeerRegio = null;
+    herteken();
+  });
+
+  document.getElementById('emFotoWeg').addEventListener('click', function () {
+    var regioId = markeerRegio;
+    var f = fotos[regioId];
+    if (!f) return;
+    var cat = FOTO_SLEUTEL + regioId;
+    Promise.all(fotosVan(cat).map(function (rij) { return verwijderFoto(cat, rij.id); }))
+      .then(function () {
+        URL.revokeObjectURL(f.url);
+        delete fotos[regioId];
+        elMarkeer.hidden = true;
+        markeerRegio = null;
+        herteken();
+      });
+  });
+
+  elFotoInput.addEventListener('change', function (e) {
+    var bestand = e.target.files && e.target.files[0];
+    var regioId = markeerRegio;
+    e.target.value = '';
+    if (!bestand || !regioId || !heeftOpslag()) return;
+    var cat = FOTO_SLEUTEL + regioId;
+    var oud = fotosVan(cat).slice();
+    verwerkFoto(cat, bestand, 'Emla ' + regioId)
+      .then(function () {
+        // één foto per regio: de vorige gaat eruit
+        return Promise.all(oud.map(function (rij) { return verwijderFoto(cat, rij.id); }));
+      })
+      .then(laadFotos)
+      .then(function () { herteken(); openMarkeer(regioId); })
+      .catch(function (fout) {
+        alert('De foto kon niet worden toegevoegd: ' + (fout && fout.message ? fout.message : fout));
+      });
+  });
+
+  // ---------------- kiezen ----------------
+  function tekenRaster() {
+    elRaster.innerHTML = EMLA.regios.map(function (r) {
+      var aan = !!keuze[r.id];
+      return '<div class="em-kaart' + (aan ? ' aan' : '') + '" data-regio="' + r.id + '"' +
+        ' role="button" tabindex="0" aria-pressed="' + aan + '">' +
+        '<div class="em-kaart-top">' + beeldVan(r, keuze[r.id], 'em-bfoto em-kfoto') +
+          '<span class="em-kaart-tekst"><span class="em-naam">' + esc(r.titel) + '</span>' +
+          '<span class="em-sub">' + esc(r.sub) + '</span>' +
+          (r.arts ? '<span class="em-arts">' + esc(r.arts) + '</span>' : '') + '</span>' +
+        '</div>' +
+        (aan ? '<div class="em-kanten">' + KANTEN.map(function (k) {
+          return '<button type="button" class="em-kant' + (keuze[r.id] === k.code ? ' aan' : '') +
+            '" data-kant="' + k.code + '" data-regio="' + r.id + '">' + k.kort + '</button>';
+        }).join('') + '</div>' : '') +
+        (aan && heeftOpslag() ? '<button type="button" class="em-fotoknop' +
+          (fotos[r.id] ? ' heeft' : '') + '" data-foto="' + r.id + '">' +
+          (fotos[r.id] ? '\u270E Foto bijstellen' : '\uD83D\uDCF7 Eigen foto') + '</button>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  elRaster.addEventListener('click', function (e) {
+    var fotoKnop = e.target.closest('.em-fotoknop');
+    if (fotoKnop) {
+      var rid = fotoKnop.dataset.foto;
+      if (fotos[rid]) { openMarkeer(rid); } else { markeerRegio = rid; elFotoInput.click(); }
+      return;
+    }
+    var kantKnop = e.target.closest('.em-kant');
+    if (kantKnop) {
+      keuze[kantKnop.dataset.regio] = kantKnop.dataset.kant;
+      herteken();
+      return;
+    }
+    var kaart = e.target.closest('.em-kaart');
+    if (!kaart) return;
+    var id = kaart.dataset.regio;
+    if (keuze[id]) delete keuze[id]; else keuze[id] = 'LR';
+    herteken();
+  });
+
+  elRaster.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var kaart = e.target.closest('.em-kaart');
+    if (!kaart) return;
+    e.preventDefault();
+    var id = kaart.dataset.regio;
+    if (keuze[id]) delete keuze[id]; else keuze[id] = 'LR';
+    herteken();
+  });
+
+  // ---------------- het briefje ----------------
+  function wanneerHtml() {
+    var eerder = zestigEerder(elTijd.value);
+    if (!eerder) {
+      return '<div class="em-wanneer"><b>' + esc(EMLA.vooraf) + '</b></div>';
+    }
+    return '<div class="em-wanneer">Afspraak om ' + esc(elTijd.value) + '. ' +
+      'Breng de crème aan om <b>' + esc(eerder) + '</b> of eerder.<br>' +
+      esc(EMLA.vooraf) + '</div>';
+  }
+
+  // Hoe meer regio's op het briefje, hoe kleiner de foto's moeten staan om op
+  // één A4 te passen. Bij twee regio's is er ruimte zat, bij zeven niet. Deze
+  // trap is nagemeten; test_emla.py bewaakt de ondergrens.
+  // Nagemeten op A4 (794 x 1123 px): bij zeven of acht regio's loopt het blad
+  // over bij 158 px.
+  function fotoHoogte(aantal) {
+    if (aantal <= 2) return 410;
+    if (aantal <= 4) return 275;
+    if (aantal <= 6) return 182;
+    return 138;
+  }
+
+  function tekenBlad() {
+    var lijst = gekozen();
+    elBlad.style.setProperty('--fotohoog', fotoHoogte(lijst.length) + 'px');
+
+    if (!lijst.length) {
+      elBlad.innerHTML = '<div class="em-leeg">Kies hierboven één of meer regio\'s. ' +
+        'Het briefje verschijnt dan hier.</div>';
+      return;
+    }
+
+    var regiosHtml = lijst.map(function (r) {
+      return '<div class="em-bladregio">' +
+        '<div class="em-vink"></div>' + beeldVan(r, keuze[r.id], 'em-bfoto') +
+        '<div><div class="em-bnaam">' + esc(r.titel) +
+          '<span class="em-bkant">' + esc(kantWoord(keuze[r.id])) + '</span></div>' +
+          '<div class="em-bsub">' + esc(r.sub) + '</div>' +
+          '<div class="em-bzin">' + esc(r.zin) + '</div></div>' +
+        '</div>';
+    }).join('');
+
+    elBlad.innerHTML =
+      '<h1>Emla® crème: waar insmeren?</h1>' +
+      '<p class="em-bladsub">Voor de botulinetoxine-injecties</p>' +
+      wanneerHtml() +
+      '<div class="em-bladkop">Waar insmeren</div>' +
+      '<div class="em-bladregios">' + regiosHtml + '</div>' +
+      '<div class="em-onder">' +
+        '<div>' +
+          '<div class="em-bladkop" style="margin-top:0">Hoe</div>' +
+          '<ul class="em-bladlijst">' + EMLA.algemeen.map(function (t) {
+            return '<li>' + esc(t) + '</li>';
+          }).join('') + '</ul>' +
+        '</div>' +
+        '<div class="em-dikte">' +
+          '<div class="em-diktekop">Een dikke laag</div>' + EMLA.dikteSvg +
+        '</div>' +
+      '</div>' +
+      '<div class="em-bladkop">Let op</div>' +
+      '<ul class="em-bladlijst">' + EMLA.letop.map(function (t) {
+        return '<li>' + esc(t) + '</li>';
+      }).join('') + '</ul>';
+    // Geen bronvermelding op het briefje: voor de ouder die dit meekrijgt is
+    // die niet relevant. De verantwoording staat in de kop van emla-data.js en
+    // onderaan deze pagina, en de tekst voor het dossier eindigt er nog mee.
+  }
+
+  // ---------------- tekst voor de brief ----------------
+  function tekstVoorBrief() {
+    var lijst = gekozen();
+    if (!lijst.length) return '';
+
+    var L = [];
+    L.push('EMLA-CREME VOOR DE BOTULINETOXINE-INJECTIES');
+    L.push('');
+
+    var eerder = zestigEerder(elTijd.value);
+    if (eerder) {
+      L.push('Afspraak om ' + elTijd.value + '. Breng de creme aan om ' + eerder + ' of eerder.');
+    }
+    L.push(EMLA.vooraf);
+    L.push('');
+
+    L.push('WAAR INSMEREN');
+    lijst.forEach(function (r) {
+      L.push(r.titel + ' (' + kantWoord(keuze[r.id]) + ') - ' + r.sub);
+      L.push(r.zin);
+      L.push('');
+    });
+
+    L.push('HOE');
+    EMLA.algemeen.forEach(function (t) { L.push(t); });
+    L.push('');
+
+    L.push('LET OP');
+    EMLA.letop.forEach(function (t) { L.push(t); });
+    L.push('');
+
+    L.push('Bron: ' + EMLA.bron);
+
+    return naarAscii(L.join('\n'));
+  }
+
+  // ---------------- samen ----------------
+  function herteken() {
+    tekenRaster();
+    tekenBlad();
+    elEpic.value = tekstVoorBrief();
+
+    var eerder = zestigEerder(elTijd.value);
+    elUitkomst.textContent = eerder ? 'Aanbrengen om ' + eerder + ' of eerder.' : '';
+  }
+
+  elTijd.addEventListener('input', herteken);
+  elTijd.addEventListener('change', herteken);
+
+  document.getElementById('emPrint').addEventListener('click', function () {
+    if (!gekozen().length) {
+      alert('Kies eerst één of meer regio\'s.');
+      return;
+    }
+    window.print();
+  });
+
+  document.getElementById('emWis').addEventListener('click', function () {
+    keuze = {};
+    elTijd.value = '';
+    herteken();
+  });
+
+  // Kopieren: de tekst gaat nog een keer door naarAscii, zodat op het klembord
+  // precies staat wat er in het vak staat.
+  var elStatus = document.getElementById('emKopieStatus');
+
+  function viaSelectie(tekst) {
+    var hulp = document.createElement('textarea');
+    hulp.value = tekst;
+    hulp.setAttribute('readonly', '');
+    hulp.style.position = 'fixed';
+    hulp.style.top = '-1000px';
+    document.body.appendChild(hulp);
+    hulp.select();
+    var gelukt = false;
+    try { gelukt = document.execCommand('copy'); } catch (e) { gelukt = false; }
+    document.body.removeChild(hulp);
+    return gelukt;
+  }
+
+  document.getElementById('emKopieer').addEventListener('click', function () {
+    var tekst = naarAscii(elEpic.value);
+    if (!tekst) { elStatus.textContent = 'Er is nog niets om te kopiëren.'; return; }
+
+    function klaar() { elStatus.textContent = '✓ Gekopieerd'; }
+    function mislukt() { elStatus.textContent = 'Kopiëren lukte niet — selecteer de tekst zelf.'; }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tekst).then(klaar, function () {
+        if (viaSelectie(tekst)) klaar(); else mislukt();
+      });
+    } else if (viaSelectie(tekst)) {
+      klaar();
+    } else {
+      mislukt();
+    }
+    setTimeout(function () { elStatus.textContent = ''; }, 2500);
+  });
+
+  document.getElementById('emHerkomst').textContent = EMLA.bron + ' ' + EMLA.bronTekening;
+  herteken();
+  laadFotos().then(herteken);
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (e) {
+      console.log('SW niet geregistreerd:', e);
+    });
+  });
+}
+function offlineStatus() {
+  document.body.classList.toggle('is-offline', !navigator.onLine);
+}
+window.addEventListener('online', offlineStatus);
+window.addEventListener('offline', offlineStatus);
+offlineStatus();
+</script>
+</body>
+</html>
