@@ -558,6 +558,32 @@ with sync_playwright() as p:
     check("de pagina haalt niets van buiten", not buiten, "| " + str(buiten)[:120])
     pg.close()
 
+    # ---- niets steekt buiten het scherm ----
+    # Met een eigen foto staan er twee knoppen naast elkaar op het kaartje, en
+    # die pasten er bij 390 px negen pixels naast. Dat werd niet gemeten: de
+    # enige breedtetoets stond op 390 px zonder foto. Nu bij vier breedtes, met
+    # een foto erin, en ook het kaartje zelf wordt nagemeten.
+    for breed in (320, 360, 390, 412):
+        pgb = b.new_context(viewport={"width": breed, "height": 820}).new_page()
+        pgb.goto(URL)
+        pgb.wait_for_timeout(500)
+        pgb.locator(".em-kaart", has_text="Kuitregio").first.click()
+        pgb.wait_for_timeout(200)
+        with pgb.expect_file_chooser() as fc4:
+            pgb.locator(".em-kaart", has_text="Kuitregio").first.locator(
+                ".em-fotoknop").click()
+        fc4.value.set_files({"name": "k.jpg", "mimeType": "image/jpeg", "buffer": rauw})
+        pgb.wait_for_timeout(1700)
+        pgb.click("#emMarkeerKlaar")
+        pgb.wait_for_timeout(400)
+        sw = pgb.evaluate("document.documentElement.scrollWidth")
+        rij = pgb.evaluate("""() => { const r = document.querySelector('.em-fotoknoprij');
+            return r ? Math.round(r.scrollWidth - r.clientWidth) : -1; }""")
+        check(str(breed) + " px: geen horizontale scroll", sw <= breed, "| " + str(sw))
+        check(str(breed) + " px: de twee knoppen passen op het kaartje", rij == 0,
+              "| " + str(rij) + " px eroverheen")
+        pgb.close()
+
     # ---- op het startscherm zetten ----
     # De app wordt niet uit een store geïnstalleerd maar via "toevoegen aan
     # startscherm". Daar moet het manifest voor kloppen, moeten de iconen echt

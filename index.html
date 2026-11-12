@@ -119,10 +119,15 @@
   /* Staat er een eigen foto, dan komt er een tweede knop naast: weghalen.
      Dat zat eerst alleen verstopt in het markeerscherm, achter een knop die
      "bijstellen" heette, en dan is het niet te vinden. */
-  .em-fotoknoprij { display: flex; gap: 6px; }
-  .em-fotoknoprij .em-fotoknop { margin-top: 5px; }
+  /* Mogen afbreken: bij sommige schermbreedtes passen de twee knoppen niet
+     naast elkaar en werd "Weghalen" een paar pixels afgesneden. Nu zakt hij
+     eronder in plaats van buiten het kaartje te vallen. */
+  .em-fotoknoprij { display: flex; flex-wrap: wrap; gap: 6px; }
+  .em-fotoknoprij .em-fotoknop {
+    margin-top: 5px; width: auto; min-width: 0; flex: 1 1 112px;
+  }
   .em-fotoweg {
-    flex: none; width: auto; padding-left: 10px; padding-right: 10px;
+    flex: 0 1 auto; width: auto; padding-left: 10px; padding-right: 10px;
     border-style: solid; border-color: var(--lijn); color: var(--muted);
   }
   .em-fotoweg:hover { border-color: var(--danger); color: var(--danger); }
