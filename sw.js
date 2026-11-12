@@ -6,7 +6,7 @@
 // een gedeelde naam zou de ene de bestanden van de andere laten weggooien.
 //
 // Let op bij wijzigen: verhoog CACHE_VERSIE, anders blijven oude bestanden hangen.
-const CACHE_VERSIE = 'emla-v11';
+const CACHE_VERSIE = 'emla-v12';
 
 const APP_BESTANDEN = [
   './',

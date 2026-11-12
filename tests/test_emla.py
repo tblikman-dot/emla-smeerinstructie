@@ -429,16 +429,62 @@ with sync_playwright() as p:
     check("foto overleeft herladen", pg.locator("#emBlad .em-bfoto img").count() == 1)
     check("knop zegt nu bijstellen", pg.locator(".em-fotoknop.heeft").count() == 1)
 
-    pg.locator(".em-fotoknop").first.click()
-    pg.wait_for_timeout(400)
-    pg.click("#emFotoWeg")
+    # Weghalen moet op het kaartje zelf staan. Het zat eerst alleen in het
+    # markeerscherm, achter een knop die "bijstellen" heet, en dan vindt
+    # niemand het.
+    check("er staat een weghaalknop op het kaartje",
+          pg.locator(".em-kaart", has_text="Binnenzijde van de voet").first.locator(
+              "[data-fotoweg]").count() == 1)
+
+    IN_DB = """async () => {
+      const db = await new Promise(r => { const q = indexedDB.open('krnFotos');
+        q.onsuccess = () => r(q.result); });
+      return await new Promise(r => {
+        const t = db.transaction('fotos','readonly').objectStore('fotos').getAll();
+        t.onsuccess = () => r(t.result.map(x => x.catId));
+      });
+    }"""
+    check("de foto staat nu in de database", pg.evaluate(IN_DB) == ["emla:voetmediaal"],
+          "| " + str(pg.evaluate(IN_DB)))
+
+    pg.locator(".em-kaart", has_text="Binnenzijde van de voet").first.locator(
+        "[data-fotoweg]").click()
     pg.wait_for_timeout(900)
     # Deze regio had vroeger een eigen schets als terugval; nu is dat de
     # meegeleverde foto van de arts. De hele keten wordt hier nagelopen.
-    check("foto weghalen zet de meegeleverde foto terug",
+    check("weghalen op het kaartje zet de meegeleverde foto terug",
           pg.locator("#emBlad .em-bfoto img").count() == 0
           and pg.locator(
               '#emBlad .em-bladregio img.em-tekfoto[src*="smeer-voet-binnen"]').count() == 1)
+    check("de weghaalknop is weg, de knop zegt weer 'Eigen foto'",
+          pg.locator("[data-fotoweg]").count() == 0
+          and pg.locator(".em-fotoknop.heeft").count() == 0)
+
+    # Dit is het stuk dat niet gemeten werd: blijft hij ook weg? Weghalen zonder
+    # dat de database leegraakt, geeft een foto die na elke herlaadbeurt
+    # terugkomt. De toets stopte eerder vóór deze herlaadbeurt.
+    check("de database is leeg na het weghalen", pg.evaluate(IN_DB) == [],
+          "| " + str(pg.evaluate(IN_DB)))
+    pg.reload()
+    pg.wait_for_timeout(1500)
+    kies(pg, "Binnenzijde van de voet")
+    pg.wait_for_timeout(600)
+    check("de foto blijft weg na herladen",
+          pg.evaluate(IN_DB) == []
+          and pg.locator("#emBlad .em-bfoto img").count() == 0
+          and pg.locator(".em-fotoknop.heeft").count() == 0,
+          "| db=" + str(pg.evaluate(IN_DB)))
+
+    # En weghalen via het markeerscherm moet blijven werken; dat is de tweede weg.
+    with pg.expect_file_chooser() as fc2:
+        pg.locator(".em-fotoknop").first.click()
+    fc2.value.set_files({"name": "voet2.jpg", "mimeType": "image/jpeg", "buffer": rauw})
+    pg.wait_for_timeout(1800)
+    pg.click("#emFotoWeg")
+    pg.wait_for_timeout(900)
+    check("weghalen in het markeerscherm werkt ook nog",
+          pg.evaluate(IN_DB) == [] and pg.locator("#emBlad .em-bfoto img").count() == 0,
+          "| db=" + str(pg.evaluate(IN_DB)))
 
     check("de pagina haalt niets van buiten", not buiten, "| " + str(buiten)[:120])
     pg.close()

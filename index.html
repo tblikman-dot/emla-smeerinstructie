@@ -116,6 +116,17 @@
   .em-fotoknop:hover { border-color: var(--accent); color: var(--accent); }
   .em-fotoknop.heeft { border-style: solid; border-color: var(--accent); color: var(--accent); }
 
+  /* Staat er een eigen foto, dan komt er een tweede knop naast: weghalen.
+     Dat zat eerst alleen verstopt in het markeerscherm, achter een knop die
+     "bijstellen" heette, en dan is het niet te vinden. */
+  .em-fotoknoprij { display: flex; gap: 6px; }
+  .em-fotoknoprij .em-fotoknop { margin-top: 5px; }
+  .em-fotoweg {
+    flex: none; width: auto; padding-left: 10px; padding-right: 10px;
+    border-style: solid; border-color: var(--lijn); color: var(--muted);
+  }
+  .em-fotoweg:hover { border-color: var(--danger); color: var(--danger); }
+
   .em-markeer {
     margin-top: 12px;
     border: 1.5px solid var(--accent);
@@ -792,19 +803,28 @@
     herteken();
   });
 
-  document.getElementById('emFotoWeg').addEventListener('click', function () {
-    var regioId = markeerRegio;
+  // Eén plek waar een eigen foto weggaat: uit de database op het toestel, uit
+  // het geheugen en van het scherm. De knop op het kaartje en die in het
+  // markeerscherm komen allebei hier uit, zodat ze niet uiteen kunnen lopen.
+  function haalFotoWeg(regioId) {
     var f = fotos[regioId];
-    if (!f) return;
+    if (!f) return Promise.resolve();
     var cat = FOTO_SLEUTEL + regioId;
-    Promise.all(fotosVan(cat).map(function (rij) { return verwijderFoto(cat, rij.id); }))
-      .then(function () {
-        URL.revokeObjectURL(f.url);
-        delete fotos[regioId];
+    return Promise.all(fotosVan(cat).map(function (rij) {
+      return verwijderFoto(cat, rij.id);
+    })).then(function () {
+      URL.revokeObjectURL(f.url);
+      delete fotos[regioId];
+      if (markeerRegio === regioId) {
         elMarkeer.hidden = true;
         markeerRegio = null;
-        herteken();
-      });
+      }
+      herteken();
+    });
+  }
+
+  document.getElementById('emFotoWeg').addEventListener('click', function () {
+    haalFotoWeg(markeerRegio);
   });
 
   elFotoInput.addEventListener('change', function (e) {
@@ -841,14 +861,28 @@
           return '<button type="button" class="em-kant' + (keuze[r.id] === k.code ? ' aan' : '') +
             '" data-kant="' + k.code + '" data-regio="' + r.id + '">' + k.kort + '</button>';
         }).join('') + '</div>' : '') +
-        (aan && heeftOpslag() ? '<button type="button" class="em-fotoknop' +
-          (fotos[r.id] ? ' heeft' : '') + '" data-foto="' + r.id + '">' +
-          (fotos[r.id] ? '\u270E Foto bijstellen' : '\uD83D\uDCF7 Eigen foto') + '</button>' : '') +
+        (aan && heeftOpslag() ? (fotos[r.id]
+          ? '<div class="em-fotoknoprij">' +
+              '<button type="button" class="em-fotoknop heeft" data-foto="' + r.id + '">' +
+                '\u270E Foto bijstellen</button>' +
+              '<button type="button" class="em-fotoknop em-fotoweg" data-fotoweg="' + r.id +
+                '" title="De eigen foto weghalen; de meegeleverde foto komt terug">' +
+                '\u2715 Weghalen</button>' +
+            '</div>'
+          : '<button type="button" class="em-fotoknop" data-foto="' + r.id + '">' +
+              '\uD83D\uDCF7 Eigen foto</button>') : '') +
         '</div>';
     }).join('');
   }
 
   elRaster.addEventListener('click', function (e) {
+    // Eerst kijken, want de weghaalknop is ook een .em-fotoknop; anders zou hij
+    // in de tak hieronder belanden en het bestandskiezertje openen.
+    var wegKnop = e.target.closest('[data-fotoweg]');
+    if (wegKnop) {
+      haalFotoWeg(wegKnop.dataset.fotoweg);
+      return;
+    }
     var fotoKnop = e.target.closest('.em-fotoknop');
     if (fotoKnop) {
       var rid = fotoKnop.dataset.foto;
