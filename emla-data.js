@@ -159,9 +159,8 @@
       foto: 'smeer-voet-binnen.webp',
       fotoKant: 'R',
       // Als enige een liggend beeld (1747 x 1100); de andere zeven zijn staand.
-      // Staan er twee naast elkaar, dan wordt dit beeld op breedte opgemeten in
-      // plaats van op hoogte, anders blijft er een hoge lege strook over.
-      fotoBreed: true,
+      // Daardoor komt dit beeld op het briefje kleiner uit dan de rest: het
+      // wordt op breedte begrensd en niet op hoogte.
     },
     {
       id: 'voetzool',

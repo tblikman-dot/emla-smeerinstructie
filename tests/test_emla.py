@@ -120,19 +120,10 @@ with sync_playwright() as p:
         # hoort dus zodra de gevraagde kant niet de kant van de foto is.
         kant = pg.evaluate("""(n) => (EMLA.regios.find(r => r.titel === n) || {}).fotoKant""", naam)
 
-        # Beide zijden: dan staan er twee beelden, en het zijn echt het linker-
-        # en het rechterbeen. Het linkerbeeld hoort gespiegeld te staan als de
-        # foto de rechterkant toont, en andersom bij de voetzool. Twee keer
-        # hetzelfde been afdrukken is precies de fout die dit moet vangen.
-        check(naam + ": beide zijden geeft twee beelden",
-              len(spiegelstand()) == 2, "| " + str(spiegelstand()))
-        check(naam + ": het linker- en het rechterbeen staan goed om",
-              spiegelstand() == [kant != "L", kant != "R"], "| " + str(spiegelstand()))
-        bijschrift = pg.evaluate(
-            """() => [...document.querySelectorAll('#emBlad .em-fotopaar figcaption')]
-                .map(f => f.textContent)""")
-        check(naam + ": onder de beelden staat links en rechts",
-              bijschrift == ["links", "rechts"], "| " + str(bijschrift))
+        # Beide zijden geeft één beeld, zoals het is aangeleverd. Twee benen
+        # naast elkaar is geprobeerd en weer teruggedraaid: ze werden te klein.
+        check(naam + ": beide zijden geeft één beeld, ongespiegeld",
+              spiegelstand() == [False], "| " + str(spiegelstand()))
 
         for knop in ("Rechts", "Links"):
             verwacht = [knop[0] != kant]
@@ -311,9 +302,9 @@ with sync_playwright() as p:
     hoogte = pg.evaluate("document.body.scrollHeight")
     check("acht regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
 
-    # Alles hierboven staat op "beide zijden": twee beelden per regio. Eenzijdig
-    # is een ander geval — één beeld per regio, geen bijschrift, en daardoor een
-    # grotere foto. Dat moet ook passen, dus hier apart gemeten.
+    # Alles hierboven staat op "beide zijden". Eenzijdig loopt door een ander
+    # stuk code — daar wordt het beeld gespiegeld — en werd nergens op papier
+    # gemeten. Hier dus apart.
     pg3 = b.new_context(viewport={"width": 794, "height": 1123}).new_page()
     pg3.goto(URL)
     pg3.wait_for_timeout(400)
@@ -327,8 +318,6 @@ with sync_playwright() as p:
     pg3.wait_for_timeout(350)
     beelden = pg3.locator("#emBlad .em-tekfoto").count()
     check("eenzijdig geeft één beeld per regio", beelden == 8, "| " + str(beelden))
-    check("geen bijschriften als er maar één kant is",
-          pg3.locator("#emBlad .em-fotopaar").count() == 0)
     pg3.emulate_media(media="print")
     pg3.wait_for_timeout(200)
     h1 = pg3.evaluate("document.body.scrollHeight")
@@ -447,11 +436,10 @@ with sync_playwright() as p:
     pg.wait_for_timeout(900)
     # Deze regio had vroeger een eigen schets als terugval; nu is dat de
     # meegeleverde foto van de arts. De hele keten wordt hier nagelopen.
-    # Twee beelden, want deze regio staat op "beide zijden".
     check("foto weghalen zet de meegeleverde foto terug",
           pg.locator("#emBlad .em-bfoto img").count() == 0
           and pg.locator(
-              '#emBlad .em-bladregio img.em-tekfoto[src*="smeer-voet-binnen"]').count() == 2)
+              '#emBlad .em-bladregio img.em-tekfoto[src*="smeer-voet-binnen"]').count() == 1)
 
     check("de pagina haalt niets van buiten", not buiten, "| " + str(buiten)[:120])
     pg.close()
