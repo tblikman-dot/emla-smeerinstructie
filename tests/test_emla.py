@@ -62,6 +62,22 @@ with sync_playwright() as p:
     check("acht regio's", pg.locator(".em-kaart").count() == 8,
           "| " + str(pg.locator(".em-kaart").count()))
     check("geen horizontale scroll", pg.evaluate("document.documentElement.scrollWidth") <= 390)
+
+    # Het merkje rechtsboven: van wie de app is. Klein en rechts, en het mag de
+    # titel niet uit het midden duwen.
+    merk = pg.locator(".topbar-merk")
+    check("het merkje staat in de balk", merk.count() == 1 and "Blikman" in merk.inner_text())
+    mdoos = merk.bounding_box()
+    tdoos = pg.locator(".topbar-title").bounding_box()
+    check("het merkje staat rechts", mdoos["x"] > tdoos["x"] + tdoos["width"],
+          "| merk=" + str(round(mdoos["x"])) + " titel eindigt op "
+          + str(round(tdoos["x"] + tdoos["width"])))
+    check("de titel staat nog in het midden",
+          abs((tdoos["x"] + tdoos["width"] / 2) - 195) <= 2,
+          "| midden=" + str(round(tdoos["x"] + tdoos["width"] / 2)))
+    check("het merkje is kleiner dan de titel",
+          pg.evaluate("""() => parseFloat(getComputedStyle(
+              document.querySelector('.topbar-merk')).fontSize)""") < 13)
     check("leeg briefje legt uit wat te doen", "Kies hierboven" in pg.inner_text("#emBlad"))
     check("leeg: geen tekst voor de brief", pg.input_value("#emEpic") == "")
 
@@ -345,6 +361,10 @@ with sync_playwright() as p:
           not pg.locator(".topbar").is_visible()
           and not pg.locator("#emRaster").is_visible()
           and not pg.locator("#emEpic").is_visible())
+    # Het merkje hoort bij de app, niet op het briefje dat de ouders meekrijgen.
+    check("het merkje staat niet op het briefje",
+          not pg.locator(".topbar-merk").is_visible()
+          and "Blikman" not in pg.inner_text("#emBlad"))
     check("het briefje staat er wel op", pg.locator("#emBlad").is_visible())
     pg.close()
 

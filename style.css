@@ -74,6 +74,25 @@ a { color: var(--accent); }
   color: var(--inkt);
 }
 
+/* Klein merkje rechts in de balk: van wie deze app is. Absoluut geplaatst en
+   niet in de flexrij, zodat de titel in het midden van de balk blijft staan en
+   niet opschuift. Bewust onopvallend: het hoort niet te concurreren met de
+   titel. Staat in de topbar, en die wordt bij het printen verborgen, dus het
+   komt niet op het briefje voor de ouders terecht. */
+.topbar-merk {
+  position: absolute; right: 14px;
+  font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  opacity: 0.8;
+  -webkit-user-select: none; user-select: none;
+  white-space: nowrap;
+}
+/* op een smal scherm mag het niet tegen de titel aan lopen */
+@media (max-width: 380px) {
+  .topbar-merk { font-size: 9.5px; right: 10px; }
+}
+
 .offline-balk {
   display: none;
   background: var(--vlag-vlak); color: var(--vlag-inkt);
