@@ -19,6 +19,20 @@ De pagina staat op een openbaar adres (wel `noindex`, dus niet in zoekmachines).
 Wat je invult wordt nergens bewaard en verdwijnt als je de pagina sluit. Eigen
 foto's die je toevoegt blijven op je eigen toestel staan en worden niet verstuurd.
 
+## Rechten
+
+© 2026 Blikman. Alle rechten voorbehouden. Zie [`LICENSE`](LICENSE).
+
+De repository is openbaar omdat GitHub Pages de pagina anders niet kan serveren,
+niet omdat de inhoud vrij te gebruiken is. Kijken, gebruiken en het briefje
+printen mag; kopiëren, hergebruiken of onder een eigen adres publiceren niet
+zonder toestemming.
+
+Eén uitzondering: de lichaamstekeningen in `anatomie-data.js` komen uit
+`@musclemap/assets` en blijven onder de MIT-licentie vallen. Die licentietekst
+staat in dat bestand en moet daar blijven staan zolang de tekeningen gebruikt
+worden.
+
 ## Geen bronvermelding
 
 De app noemt nergens een bron: niet op het scherm, niet op het briefje en niet

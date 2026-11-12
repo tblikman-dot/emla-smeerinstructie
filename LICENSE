@@ -1,0 +1,33 @@
+Copyright (c) 2026 Blikman. Alle rechten voorbehouden.
+
+Deze repository is openbaar zodat de pagina via GitHub Pages te bekijken is.
+Openbaar betekent hier niet vrij van rechten.
+
+
+WAT WEL MAG
+
+De pagina gebruiken waarvoor hij bedoeld is: regio's aanvinken, het briefje
+printen of als pdf bewaren, en dat meegeven aan ouders en patienten. De link
+delen met collega's mag ook. Daar is hij voor.
+
+
+WAT NIET MAG ZONDER SCHRIFTELIJKE TOESTEMMING
+
+- De inhoud van deze repository geheel of gedeeltelijk kopieren,
+  verveelvoudigen, verspreiden of openbaar maken.
+- Er afgeleide werken van maken.
+- De app of delen ervan onder een eigen naam of op een eigen adres publiceren.
+- De foto's en de voetbeelden los gebruiken. Dat is eigen materiaal van de
+  rechthebbende en staat hier alleen voor deze instructie.
+
+
+UITZONDERING: DE ANATOMISCHE TEKENINGEN
+
+Het bestand anatomie-data.js bevat lichaamstekeningen die zijn overgenomen uit
+@musclemap/assets. Dat materiaal staat onder de MIT-licentie en blijft daaronder
+vallen; de volledige licentietekst staat in dat bestand zelf. Het voorbehoud
+hierboven geldt dus niet voor dat deel, en die licentietekst mag er niet uit
+zolang de tekeningen in de app zitten.
+
+
+Vragen of toestemming nodig? Neem contact op via de repository op GitHub.
