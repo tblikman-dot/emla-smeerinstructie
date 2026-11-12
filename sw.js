@@ -6,7 +6,7 @@
 // een gedeelde naam zou de ene de bestanden van de andere laten weggooien.
 //
 // Let op bij wijzigen: verhoog CACHE_VERSIE, anders blijven oude bestanden hangen.
-const CACHE_VERSIE = 'emla-v10';
+const CACHE_VERSIE = 'emla-v11';
 
 const APP_BESTANDEN = [
   './',
@@ -16,6 +16,7 @@ const APP_BESTANDEN = [
   './epictekst.js',
   './fotos.js',
   './anatomie-data.js',
+  './smeer-lies.webp',
   './smeer-bovenbeen-voor.webp',
   './smeer-bovenbeen-binnen.webp',
   './smeer-bovenbeen-achter.webp',

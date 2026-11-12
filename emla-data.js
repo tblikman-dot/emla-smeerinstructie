@@ -33,11 +33,16 @@
 //    botulinetoxine vaak eenzijdig wordt gegeven. Het is een keuze van de arts,
 //    geen uitspraak uit de bron.
 //
-// EEN ACHTSTE REGIO IS TOEGEVOEGD, die niet op de poster staat: "Bovenkant van
-// de voet". Dat is een toevoeging van de gebruiker; de zin erbij is door mij
-// geschreven, op haar uitdrukkelijke aanwijzing ("die mag je zelf naar inzicht
-// invullen"), in dezelfde bewoording als de zeven posterregio's. Alles wat van
-// de poster komt staat er dus nog letterlijk; dit is het enige dat niet.
+// TWEE REGIO'S ZIJN TOEGEVOEGD die niet op de poster staan. Allebei op verzoek
+// van de gebruiker, allebei met een zin die door mij is geschreven, in dezelfde
+// bewoording als de zeven posterregio's:
+//  - "Bovenkant van de voet", op haar uitdrukkelijke aanwijzing ("die mag je
+//    zelf naar inzicht invullen");
+//  - "Liesregio", met een eigen foto van haar. De zin is kort gehouden, zoals
+//    "Smeer de binnenzijde van de voet in.": over hoe ver de lies doorloopt
+//    staat niets vast, dus daar wordt niets over beweerd.
+// Alles wat van de poster komt staat er nog letterlijk; dit zijn de enige twee
+// die dat niet zijn.
 //
 // HERKOMST VAN DE FOTO'S: aangeleverd door de gebruiker, eigen materiaal; het paarse
 // vlak zit al op de foto. De drie voetbeelden zijn renders, de vijf beenfoto's
@@ -75,6 +80,20 @@
   var BOX_SCHEEN     = '318 976 388 372';   // knie tot enkel
 
   var REGIOS = [
+    {
+      // NEGENDE REGIO, een toevoeging van de gebruiker; stond niet in de
+      // oorspronkelijke instructie. De foto is door haar aangeleverd. De zin
+      // hieronder is kort gehouden, in dezelfde vorm als "Smeer de binnenzijde
+      // van de voet in.": over hoe ver de lies doorloopt staat niets vast, dus
+      // daar wordt niets over beweerd. De foto laat het gebied zien.
+      // Staat vooraan omdat de regio's van boven naar beneden lopen.
+      id: 'lies',
+      titel: 'Liesregio',
+      sub: '',
+      zin: 'Smeer de liesregio in.',
+      foto: 'smeer-lies.webp',
+      fotoKant: 'R',
+    },
     {
       id: 'bovenbeenvoor',
       titel: 'Voorzijde bovenbeen',

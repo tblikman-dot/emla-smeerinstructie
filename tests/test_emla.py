@@ -1,4 +1,4 @@
-# Emla-smeerinstructie, losse app: de acht regio's, het briefje en de tekst
+# Emla-smeerinstructie, losse app: de negen regio's, het briefje en de tekst
 # voor de brief. Draai met:  python3 -m http.server 9053  in de hoofdmap.
 #
 # Waar dit vooral op let: de zinnen moeten LETTERLIJK de overgetypte zinnen zijn
@@ -22,13 +22,14 @@ ZINNEN = [
     "Smeer de voorzijde van het onderbeen in, over de volledige voorste onderbeenregio (van knie tot enkel).",
     "Smeer de binnenzijde van de voet in.",
     "Smeer de onderkant van de voet in, van de hiel tot aan de tenen.",
-    # Deze stond niet in de oorspronkelijke instructie: achtste regio, toegevoegd
-    # op aanwijzing van de arts, zin geschreven zoals de zeven andere.
+    # Deze twee stonden niet in de oorspronkelijke instructie: toegevoegd op
+    # aanwijzing van de arts, zinnen geschreven zoals de zeven andere.
     "Smeer de bovenkant van de voet in, van de enkel tot aan de tenen.",
+    "Smeer de liesregio in.",
 ]
-ALLE = ["Voorzijde bovenbeen", "Binnenzijde bovenbeen", "Achterzijde bovenbeen",
-        "Kuitregio", "Voorzijde onderbeen", "Bovenkant van de voet",
-        "Binnenzijde van de voet", "Onderkant van de voet"]
+ALLE = ["Liesregio", "Voorzijde bovenbeen", "Binnenzijde bovenbeen",
+        "Achterzijde bovenbeen", "Kuitregio", "Voorzijde onderbeen",
+        "Bovenkant van de voet", "Binnenzijde van de voet", "Onderkant van de voet"]
 
 # Op verzoek van de gebruiker staat er geen spiernaam meer op het briefje. Deze
 # toets valt om zodra er toch weer een in de patiententekst sluipt.
@@ -59,7 +60,7 @@ with sync_playwright() as p:
     pg.goto(URL)
     pg.wait_for_timeout(500)
 
-    check("acht regio's", pg.locator(".em-kaart").count() == 8,
+    check("negen regio's", pg.locator(".em-kaart").count() == 9,
           "| " + str(pg.locator(".em-kaart").count()))
     check("geen horizontale scroll", pg.evaluate("document.documentElement.scrollWidth") <= 390)
 
@@ -102,9 +103,7 @@ with sync_playwright() as p:
     # hoort hij gespiegeld te staan en bij "beide" twee keer. Spiegelen is
     # makkelijk andersom te krijgen en een gespiegeld briefje is een echte fout,
     # dus dit wordt per regio en per kant nagemeten.
-    MET_FOTO = ["Voorzijde bovenbeen", "Binnenzijde bovenbeen", "Achterzijde bovenbeen",
-                "Kuitregio", "Voorzijde onderbeen", "Bovenkant van de voet",
-                "Binnenzijde van de voet", "Onderkant van de voet"]
+    MET_FOTO = list(ALLE)
 
     def spiegelstand():
         return pg.evaluate("""() => [...document.querySelectorAll('#emBlad .em-tekfoto')]
@@ -136,8 +135,8 @@ with sync_playwright() as p:
         kies(pg, naam)
         pg.wait_for_timeout(80)
 
-    check("alle acht regio's hebben een meegeleverde foto",
-          pg.evaluate("() => EMLA.regios.filter(r => r.foto).length") == 8,
+    check("alle negen regio's hebben een meegeleverde foto",
+          pg.evaluate("() => EMLA.regios.filter(r => r.foto).length") == 9,
           "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.foto).length")))
     # De vijf beenregio's houden hun anatomische tekening als terugval; de foto
     # wint. Voor de drie voeten is de tekening helemaal weg: die waren eigen
@@ -145,8 +144,8 @@ with sync_playwright() as p:
     check("de drie voeten hebben geen eigen schets meer",
           pg.evaluate("""() => EMLA.regios
               .filter(r => r.id.indexOf('voet') === 0 && r.tekening).length""") == 0)
-    check("zeven beelden tonen de rechterkant",
-          pg.evaluate("() => EMLA.regios.filter(r => r.fotoKant === 'R').length") == 7,
+    check("acht beelden tonen de rechterkant",
+          pg.evaluate("() => EMLA.regios.filter(r => r.fotoKant === 'R').length") == 8,
           "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.fotoKant === 'R').length")))
     # Een zoolaanzicht is het spiegelbeeld van een bovenaanzicht; deze foto toont
     # daardoor als enige de linkervoet. Gelijktrekken met de rest is een fout.
@@ -300,7 +299,7 @@ with sync_playwright() as p:
     pg.emulate_media(media="print")
     pg.wait_for_timeout(200)
     hoogte = pg.evaluate("document.body.scrollHeight")
-    check("acht regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
+    check("negen regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
 
     # Alles hierboven staat op "beide zijden". Eenzijdig loopt door een ander
     # stuk code — daar wordt het beeld gespiegeld — en werd nergens op papier
@@ -317,19 +316,19 @@ with sync_playwright() as p:
     pg3.fill("#emTijd", "14:30")
     pg3.wait_for_timeout(350)
     beelden = pg3.locator("#emBlad .em-tekfoto").count()
-    check("eenzijdig geeft één beeld per regio", beelden == 8, "| " + str(beelden))
+    check("eenzijdig geeft één beeld per regio", beelden == 9, "| " + str(beelden))
     pg3.emulate_media(media="print")
     pg3.wait_for_timeout(200)
     h1 = pg3.evaluate("document.body.scrollHeight")
     fh1 = pg3.evaluate("""() => getComputedStyle(document.getElementById('emBlad'))
         .getPropertyValue('--fotohoog').trim()""")
-    check("acht regio's eenzijdig passen op één A4 (foto " + fh1 + ")",
+    check("negen regio's eenzijdig passen op één A4 (foto " + fh1 + ")",
           h1 <= 1123, "| " + str(h1) + " px")
     pg3.close()
 
     # De foto's worden groter naarmate er minder regio's op het briefje staan.
     # Elk aantal moet op één A4 blijven passen; dat wordt hier allemaal gemeten.
-    for aantal in (1, 2, 3, 4, 5, 6, 7, 8):
+    for aantal in (1, 2, 3, 4, 5, 6, 7, 8, 9):
         pg2 = b.new_context(viewport={"width": 794, "height": 1123}).new_page()
         pg2.goto(URL)
         pg2.wait_for_timeout(450)
