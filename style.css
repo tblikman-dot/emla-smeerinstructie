@@ -63,10 +63,27 @@ a { color: var(--accent); }
   height: 48px;
   display: flex; align-items: center; justify-content: center;
   padding: 0 16px;
-  background: color-mix(in srgb, var(--papier) 82%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--lijn);
+  /* Bijna dekkend als terugval: zonder blur zou een doorzichtige balk de
+     tekst eronder dwars door de titel heen laten lopen zodra je scrolt. */
+  background: color-mix(in srgb, var(--papier) 94%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--lijn) 70%, transparent);
+}
+
+/* Kan de browser de achtergrond vervagen, dan mag de balk doorzichtiger. Wat
+   eronder doorschuift blijft als kleur zichtbaar maar wordt onleesbaar; dat is
+   het bedoelde effect.
+
+   LET OP bij het bijstellen van dit getal: de headless browser waarin de toetsen
+   draaien zegt wel dat hij backdrop-filter ondersteunt, maar vervaagt in een
+   schermafbeelding niets. Wat daar te zien is, is alleen de doorzichtigheid —
+   de tekst eronder blijft er scherp doorheen staan. Afgaan op zo'n afbeelding
+   leidt tot een veel te dekkende balk. Beoordeel dit op een echt toestel. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .topbar {
+    background: color-mix(in srgb, var(--papier) 70%, transparent);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+  }
 }
 .topbar-title {
   font-size: 13px; font-weight: 500;

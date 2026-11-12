@@ -89,6 +89,18 @@ with sync_playwright() as p:
     check("de titel staat nog in het midden",
           abs((tdoos["x"] + tdoos["width"] / 2) - 195) <= 2,
           "| midden=" + str(round(tdoos["x"] + tdoos["width"] / 2)))
+    # De balk hoort doorzichtig te zijn, met een vervaging erachter. De
+    # vervaging zelf is hier niet te meten: deze browser zegt dat hij
+    # backdrop-filter kan, maar vervaagt in een schermafbeelding niets. Dat de
+    # regel er staat en dat de achtergrond niet dekkend is, is wel te meten.
+    balk = pg.evaluate("""() => { const s = getComputedStyle(document.querySelector('.topbar'));
+        return { vlak: s.backgroundColor,
+                 waas: s.backdropFilter || s.webkitBackdropFilter || '' }; }""")
+    doorzichtig = "/" in balk["vlak"] or "rgba" in balk["vlak"]
+    check("de balk is doorzichtig", doorzichtig, "| " + balk["vlak"])
+    check("er zit een vervaging achter de balk", "blur" in balk["waas"],
+          "| " + balk["waas"])
+
     check("het merkje is kleiner dan de titel",
           pg.evaluate("""() => parseFloat(getComputedStyle(
               document.querySelector('.topbar-merk')).fontSize)""") < 13)
