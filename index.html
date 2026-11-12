@@ -26,42 +26,43 @@
   }
   .em-terug:hover { text-decoration: underline; }
 
-  .em-kop { font-size: 1.45rem; margin: 0 0 6px; }
+  .em-kop {
+    font-size: clamp(30px, 6.4vw, 44px);
+    font-weight: 600; letter-spacing: -0.025em; line-height: 1.07;
+    margin: 26px 0 10px;
+  }
   .em-intro {
-    font-family: system-ui, sans-serif;
-    font-size: 13.5px; color: var(--muted);
-    line-height: 1.65; margin: 0 0 14px;
+    font-size: 17px; color: var(--muted);
+    line-height: 1.52; margin: 0 0 22px; max-width: 62ch;
   }
 
   .em-vlag {
-    font-family: system-ui, sans-serif;
-    font-size: 12.5px; line-height: 1.6;
-    border-radius: 11px; padding: 10px 13px;
-    margin: 0 0 16px;
-    background: #FBF3DC; color: #6B4E06;
+    font-size: 14px; line-height: 1.55;
+    border-radius: 14px; padding: 13px 16px;
+    margin: 0 0 22px; max-width: 62ch;
+    background: var(--vlag-vlak); color: var(--vlag-inkt);
   }
   .em-vlag strong { display: block; margin-bottom: 2px; }
 
-  .em-sectie { margin-top: 26px; }
-  .em-sectie h2 { font-size: 1.1rem; margin: 0 0 3px; }
+  .em-sectie { margin-top: 44px; }
+  .em-sectie h2 { font-size: 24px; margin: 0 0 4px; }
   .em-sectie .uitleg {
-    font-family: system-ui, sans-serif;
-    font-size: 13px; color: var(--muted);
-    line-height: 1.6; margin: 0 0 12px;
+    font-size: 15px; color: var(--muted);
+    line-height: 1.55; margin: 0 0 16px; max-width: 62ch;
   }
 
   /* ---- regio's kiezen ---- */
   .em-raster {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
-    gap: 9px;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 12px;
   }
   .em-kaart {
-    background: var(--paneel);
-    border: 1.5px solid var(--lijn);
-    border-radius: 13px;
-    padding: 9px 10px 10px;
-    font-family: system-ui, sans-serif;
+    background: var(--papier);
+    border: 1px solid var(--lijn);
+    border-radius: 18px;
+    padding: 12px 13px 13px;
+    transition: border-color .15s ease, background .15s ease;
     cursor: pointer;
     text-align: left;
     display: flex;
@@ -75,6 +76,7 @@
   .em-kaart .em-tekfoto {
     height: 106px; width: auto; flex: none; display: block;
     max-width: 100%; object-fit: contain;
+    background: #fff; border-radius: 10px;
   }
   .em-gespiegeld { transform: scaleX(-1); }
   .em-tweefoto { display: flex; gap: 3px; flex: none; }
@@ -84,14 +86,14 @@
   .em-kaart-tekst { min-width: 0; }
   .em-kaart .em-naam,
   .em-kaart .em-sub { display: block; overflow-wrap: break-word; }
-  .em-kaart .em-naam { font-size: 13px; font-weight: 700; line-height: 1.25; }
+  .em-kaart .em-naam { font-size: 15px; font-weight: 600; line-height: 1.3; letter-spacing: -0.012em; }
   .em-kaart .em-arts {
     display: block;
-    margin-top: 4px;
-    font-size: 11px; line-height: 1.4;
-    color: var(--accent);
+    margin-top: 5px;
+    font-size: 12.5px; line-height: 1.4;
+    color: var(--muted);
   }
-  .em-kaart .em-sub { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+  .em-kaart .em-sub { font-size: 13px; color: var(--muted); line-height: 1.38; }
 
   /* ---- eigen foto per regio ---- */
   .em-fotoknop {
@@ -145,8 +147,8 @@
     flex: 1;
     border: 1px solid var(--lijn);
     background: var(--paneel);
-    border-radius: 7px;
-    padding: 5px 2px;
+    border-radius: 980px;
+    padding: 6px 2px;
     font-family: system-ui, sans-serif;
     font-size: 11.5px; font-weight: 700;
     color: var(--muted);
@@ -172,13 +174,13 @@
   }
 
   .em-knop {
-    padding: 10px 18px;
+    padding: 11px 21px;
     border: none;
-    border-radius: 11px;
+    border-radius: 980px;
     background: var(--accent);
     color: #fff;
-    font-family: system-ui, sans-serif;
-    font-size: 14px; font-weight: 700;
+    font-family: inherit;
+    font-size: 15px; font-weight: 500; letter-spacing: -0.01em;
     cursor: pointer;
   }
   .em-knop.rustig {
@@ -190,16 +192,24 @@
   .em-knoprij { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 
   /* ---- het briefje ---- */
+  /* Het briefje is een document, geen schermonderdeel: het blijft papierwit
+     met zwarte letters, ook bij een donker scherm, zodat het er op het scherm
+     uitziet zoals het uit de printer komt. Daarom staan hier vaste kleuren en
+     geen tokens. */
   .em-blad {
     background: #fff;
-    border: 1px solid var(--lijn);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(15,39,51,0.07);
-    padding: 22px 24px 26px;
-    font-family: system-ui, sans-serif;
-    color: var(--inkt);
+    border: 1px solid #d2d2d7;
+    border-radius: 18px;
+    box-shadow: none;
+    padding: 26px 28px 30px;
+    font-family: inherit;
+    color: #1d1d1f;
   }
-  .em-blad h1 { font-family: 'Georgia', serif; font-size: 1.45rem; margin: 0 0 2px; }
+  .em-blad .em-bladsub,
+  .em-blad .em-sub,
+  .em-blad .em-flauw { color: #6e6e73; }
+  .em-blad .em-bladkop { color: #1d1d1f; border-bottom-color: #d2d2d7; }
+  .em-blad h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 3px; }
   .em-blad .em-bladsub { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
 
   .em-wanneer {
@@ -381,6 +391,10 @@
     /* de foto's zijn 20% groter; die hoogte wordt hier teruggehaald bij de twee
        opsommingen, zodat het briefje op één vel blijft passen */
     .em-bladlijst { font-size: 11.5px; line-height: 1.45; }
+    /* Op het scherm mag de kop groot zijn; op papier telt elke millimeter,
+       want alle acht de regio's plus een tijd moeten op één vel. Nagemeten. */
+    .em-blad h1 { font-size: 21px; margin-bottom: 1px; }
+    .em-blad .em-bladsub { margin-bottom: 10px; }
     .em-bron { font-size: 10px; }
     .em-bladregio svg.em-tek { height: 54px; }
     .em-bladregio .em-tekfoto { height: var(--fotohoog, 130px); }
