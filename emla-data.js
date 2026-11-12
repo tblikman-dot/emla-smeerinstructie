@@ -194,6 +194,21 @@
       // andere zeven de rechter. Zet hem dus niet 'gelijk' met de rest.
       fotoKant: 'L',
     },
+    {
+      // DE OPEN PLEK. Als enige regio zonder meegeleverde foto en zonder
+      // tekening. Hier zet de gebruiker zelf een foto in — camera of bestand —
+      // en markeert daarop waar de creme moet komen, met hetzelfde vlak als bij
+      // de andere regio's. Bedoeld voor alles wat niet onder de negen regio's
+      // hierboven valt.
+      //
+      // Zonder foto heeft deze regio niets te laten zien: op het scherm staat
+      // er dan een leeg vak, en printen wordt tegengehouden. Zie emPrint in
+      // index.html.
+      id: 'eigen',
+      titel: 'Andere locatie',
+      sub: '',
+      zin: 'Smeer het gemarkeerde gebied op de foto in.',
+    },
   ];
 
   // Het kader bovenaan de oorspronkelijke instructie. In de schermafbeelding staan de woorden

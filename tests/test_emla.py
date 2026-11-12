@@ -1,4 +1,4 @@
-# Emla-smeerinstructie, losse app: de negen regio's, het briefje en de tekst
+# Emla-smeerinstructie, losse app: de tien regio's, het briefje en de tekst
 # voor de brief. Draai met:  python3 -m http.server 9053  in de hoofdmap.
 #
 # Waar dit vooral op let: de zinnen moeten LETTERLIJK de overgetypte zinnen zijn
@@ -26,10 +26,16 @@ ZINNEN = [
     # aanwijzing van de arts, zinnen geschreven zoals de zeven andere.
     "Smeer de bovenkant van de voet in, van de enkel tot aan de tenen.",
     "Smeer de liesregio in.",
+    # De open plek heeft geen meegeleverde foto; de gebruiker zet er zelf een in.
+    "Smeer het gemarkeerde gebied op de foto in.",
 ]
 ALLE = ["Liesregio", "Voorzijde bovenbeen", "Binnenzijde bovenbeen",
         "Achterzijde bovenbeen", "Kuitregio", "Voorzijde onderbeen",
-        "Bovenkant van de voet", "Binnenzijde van de voet", "Onderkant van de voet"]
+        "Bovenkant van de voet", "Binnenzijde van de voet", "Onderkant van de voet",
+        "Andere locatie"]
+# De open plek: geen meegeleverd beeld, dus hij doet niet mee aan de toetsen
+# over spiegelen en over meegeleverde fotos.
+OPEN = "Andere locatie"
 
 # Op verzoek van de gebruiker staat er geen spiernaam meer op het briefje. Deze
 # toets valt om zodra er toch weer een in de patiententekst sluipt.
@@ -60,7 +66,7 @@ with sync_playwright() as p:
     pg.goto(URL)
     pg.wait_for_timeout(500)
 
-    check("negen regio's", pg.locator(".em-kaart").count() == 9,
+    check("tien regio's", pg.locator(".em-kaart").count() == 10,
           "| " + str(pg.locator(".em-kaart").count()))
     check("geen horizontale scroll", pg.evaluate("document.documentElement.scrollWidth") <= 390)
 
@@ -103,7 +109,7 @@ with sync_playwright() as p:
     # hoort hij gespiegeld te staan en bij "beide" twee keer. Spiegelen is
     # makkelijk andersom te krijgen en een gespiegeld briefje is een echte fout,
     # dus dit wordt per regio en per kant nagemeten.
-    MET_FOTO = list(ALLE)
+    MET_FOTO = [n for n in ALLE if n != OPEN]
 
     def spiegelstand():
         return pg.evaluate("""() => [...document.querySelectorAll('#emBlad .em-tekfoto')]
@@ -135,7 +141,7 @@ with sync_playwright() as p:
         kies(pg, naam)
         pg.wait_for_timeout(80)
 
-    check("alle negen regio's hebben een meegeleverde foto",
+    check("negen van de tien regio's hebben een meegeleverde foto",
           pg.evaluate("() => EMLA.regios.filter(r => r.foto).length") == 9,
           "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.foto).length")))
     # De vijf beenregio's houden hun anatomische tekening als terugval; de foto
@@ -299,7 +305,7 @@ with sync_playwright() as p:
     pg.emulate_media(media="print")
     pg.wait_for_timeout(200)
     hoogte = pg.evaluate("document.body.scrollHeight")
-    check("negen regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
+    check("tien regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
 
     # Alles hierboven staat op "beide zijden". Eenzijdig loopt door een ander
     # stuk code — daar wordt het beeld gespiegeld — en werd nergens op papier
@@ -316,19 +322,19 @@ with sync_playwright() as p:
     pg3.fill("#emTijd", "14:30")
     pg3.wait_for_timeout(350)
     beelden = pg3.locator("#emBlad .em-tekfoto").count()
-    check("eenzijdig geeft één beeld per regio", beelden == 9, "| " + str(beelden))
+    check("eenzijdig geeft één beeld per regio met foto", beelden == 9, "| " + str(beelden))
     pg3.emulate_media(media="print")
     pg3.wait_for_timeout(200)
     h1 = pg3.evaluate("document.body.scrollHeight")
     fh1 = pg3.evaluate("""() => getComputedStyle(document.getElementById('emBlad'))
         .getPropertyValue('--fotohoog').trim()""")
-    check("negen regio's eenzijdig passen op één A4 (foto " + fh1 + ")",
+    check("tien regio's eenzijdig passen op één A4 (foto " + fh1 + ")",
           h1 <= 1123, "| " + str(h1) + " px")
     pg3.close()
 
     # De foto's worden groter naarmate er minder regio's op het briefje staan.
     # Elk aantal moet op één A4 blijven passen; dat wordt hier allemaal gemeten.
-    for aantal in (1, 2, 3, 4, 5, 6, 7, 8, 9):
+    for aantal in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
         pg2 = b.new_context(viewport={"width": 794, "height": 1123}).new_page()
         pg2.goto(URL)
         pg2.wait_for_timeout(450)
@@ -485,6 +491,57 @@ with sync_playwright() as p:
     check("weghalen in het markeerscherm werkt ook nog",
           pg.evaluate(IN_DB) == [] and pg.locator("#emBlad .em-bfoto img").count() == 0,
           "| db=" + str(pg.evaluate(IN_DB)))
+
+    # ---- de open plek ----
+    # Eén regio zonder meegeleverd beeld: daar zet de gebruiker zelf een foto
+    # in en markeert erop waar de creme moet komen.
+    check("de open plek heeft geen foto en geen tekening",
+          pg.evaluate("""() => { const r = EMLA.regios.find(x => x.id === 'eigen');
+              return !!r && !r.foto && !r.tekening && !r.fotoKant; }"""))
+    check("er is precies één zo'n regio",
+          pg.evaluate("() => EMLA.regios.filter(r => !r.foto && !r.tekening).length") == 1)
+
+    pg.locator(".em-kaart", has_text=OPEN).first.scroll_into_view_if_needed()
+    check("op het kaartje staat een leeg vak",
+          pg.locator(".em-kaart", has_text=OPEN).first.locator(".em-legvak").count() == 1)
+    kies(pg, OPEN)
+    pg.wait_for_timeout(300)
+    check("op het briefje ook, zolang er geen foto is",
+          pg.locator("#emBlad .em-legvak").count() == 1)
+    check("de knop voor een eigen foto staat erbij",
+          pg.locator(".em-kaart", has_text=OPEN).first.locator(".em-fotoknop").count() == 1)
+
+    # Printen met een leeg vak erin hoort niet te kunnen.
+    gezegd = []
+    pg.once("dialog", lambda d: (gezegd.append(d.message), d.dismiss()))
+    pg.click("#emPrint")
+    pg.wait_for_timeout(400)
+    check("printen wordt tegengehouden zolang er geen foto is",
+          gezegd and "Andere locatie" in gezegd[0], "| " + str(gezegd))
+
+    # Nu een eigen foto erin, net als bij de andere regio's.
+    with pg.expect_file_chooser() as fc3:
+        pg.locator(".em-kaart", has_text=OPEN).first.locator(".em-fotoknop").click()
+    fc3.value.set_files({"name": "plek.jpg", "mimeType": "image/jpeg", "buffer": rauw})
+    pg.wait_for_timeout(1800)
+    check("het markeerscherm gaat open voor de open plek",
+          not pg.locator("#emMarkeer").is_hidden())
+    pg.click("#emMarkeerKlaar")
+    pg.wait_for_timeout(500)
+    check("de foto staat op het briefje en het lege vak is weg",
+          pg.locator("#emBlad .em-bfoto img").count() == 1
+          and pg.locator("#emBlad .em-legvak").count() == 0)
+    check("het markeervlak staat op de foto",
+          pg.locator("#emBlad .em-bfoto svg .em-zone").count() == 1)
+    check("de foto is bewaard onder een eigen sleutel",
+          pg.evaluate(IN_DB) == ["emla:eigen"], "| " + str(pg.evaluate(IN_DB)))
+
+    pg.locator(".em-kaart", has_text=OPEN).first.locator("[data-fotoweg]").click()
+    pg.wait_for_timeout(900)
+    check("weghalen zet het lege vak terug",
+          pg.locator("#emBlad .em-legvak").count() == 1
+          and pg.locator("#emBlad .em-bfoto img").count() == 0
+          and pg.evaluate(IN_DB) == [], "| db=" + str(pg.evaluate(IN_DB)))
 
     check("de pagina haalt niets van buiten", not buiten, "| " + str(buiten)[:120])
     pg.close()

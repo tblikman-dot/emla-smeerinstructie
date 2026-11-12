@@ -127,6 +127,18 @@
   }
   .em-fotoweg:hover { border-color: var(--danger); color: var(--danger); }
 
+  /* De open plek zonder eigen foto: een leeg vak, even groot als het beeld dat
+     er hoort te komen, zodat de rij niet verspringt zodra de foto er is. */
+  .em-legvak {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+    flex: none;
+    border: 1.5px dashed var(--lijn); border-radius: 10px;
+    color: var(--muted); text-align: center; line-height: 1.2;
+    height: var(--fotohoog, 138px); width: 74px; font-size: 10px;
+  }
+  .em-legvak-kaart { height: 106px; width: 86px; font-size: 11px; }
+
   .em-markeer {
     margin-top: 12px;
     border: 1.5px solid var(--accent);
@@ -702,7 +714,18 @@
       return fotoBeeld(regio, spiegel, k === 'L' ? 'links' : 'rechts');
     }
 
+    // De open plek: geen meegeleverd beeld en geen tekening. Zolang er nog geen
+    // eigen foto is, staat er een leeg vak dat dat zegt. tekenRegio zou hier
+    // struikelen over een ontbrekende tekening.
+    if (!regio.tekening) return legVak(klasse);
+
     return tekenRegio(regio, kant);
+  }
+
+  function legVak(klasse) {
+    var opKaart = String(klasse || '').indexOf('em-kfoto') !== -1;
+    return '<div class="em-legvak' + (opKaart ? ' em-legvak-kaart' : '') + '">' +
+      '<span aria-hidden="true">📷</span><span>Nog geen foto</span></div>';
   }
 
   // Het merkje achter de naam op het briefje. Bij beide zijden twee merkjes,
@@ -1033,6 +1056,16 @@
   document.getElementById('emPrint').addEventListener('click', function () {
     if (!gekozen().length) {
       alert('Kies eerst één of meer regio\'s.');
+      return;
+    }
+    // De open plek zonder foto levert een briefje met een leeg vak erin. Dat
+    // hoort niet mee de deur uit, dus hier stopt het.
+    var zonder = gekozen().filter(function (r) {
+      return !r.foto && !r.tekening && !fotos[r.id];
+    });
+    if (zonder.length) {
+      alert('Voeg eerst een foto toe bij "' + zonder[0].titel +
+        '", of haal die regio weg.');
       return;
     }
     window.print();
