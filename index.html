@@ -57,6 +57,13 @@
   }
 
   /* ---- regio's kiezen ---- */
+  .em-groepkop {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted);
+    margin: 24px 0 10px;
+  }
+  #emRaster > .em-groepkop:first-child { margin-top: 2px; }
   .em-raster {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
@@ -331,6 +338,17 @@
   .em-bladlijst { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; }
   .em-bladlijst li { margin-bottom: 3px; }
 
+  /* Compacte stand vanaf dertien regio's: alles een slag kleiner, anders valt
+     het briefje van het A4. Gaat aan via tekenBlad. */
+  .em-blad.em-vol .em-bladregios { gap: 5px 10px; }
+  .em-blad.em-vol .em-bladregio svg.em-tek { height: 44px; }
+  .em-blad.em-vol .em-bladregio .em-bnaam { font-size: 12px; }
+  .em-blad.em-vol .em-bladregio .em-bkant { font-size: 10px; padding: 0 6px; }
+  .em-blad.em-vol .em-bladregio .em-bzin { font-size: 11px; line-height: 1.3; margin-top: 2px; }
+  .em-blad.em-vol .em-bladlijst { font-size: 11px; line-height: 1.4; }
+  .em-blad.em-vol .em-bladlijst li { margin-bottom: 1px; }
+  .em-blad.em-vol .em-bladkop { margin: 8px 0 4px; }
+
   .em-onder {
     display: flex;
     gap: 16px;
@@ -475,7 +493,7 @@
       <p class="uitleg">
         Tik een regio aan en kies daarna de kant; er wordt vaak aan één kant geïnjecteerd.
       </p>
-      <div class="em-raster" id="emRaster"></div>
+      <div id="emRaster"></div>
       <input type="file" id="emFotoInput" accept="image/*" hidden>
 
       <div class="em-markeer" id="emMarkeer" hidden>
@@ -899,8 +917,25 @@
   });
 
   // ---------------- kiezen ----------------
+  // De groepen op het keuzescherm. Benen eerst: dat is de hoofdmoot van de
+  // injecties; daarbinnen lopen de regio's van boven naar beneden.
+  var GROEPEN = [
+    { code: 'been', naam: 'Benen' },
+    { code: 'arm', naam: 'Arm en schouder' },
+    { code: 'anders', naam: 'Ergens anders' },
+  ];
+
   function tekenRaster() {
-    elRaster.innerHTML = EMLA.regios.map(function (r) {
+    elRaster.innerHTML = GROEPEN.map(function (g) {
+      var kaarten = EMLA.regios.filter(function (r) { return r.groep === g.code; })
+        .map(kaartHtml).join('');
+      if (!kaarten) return '';
+      return '<h3 class="em-groepkop">' + g.naam + '</h3>' +
+        '<div class="em-raster">' + kaarten + '</div>';
+    }).join('');
+  }
+
+  function kaartHtml(r) {
       var aan = !!keuze[r.id];
       return '<div class="em-kaart' + (aan ? ' aan' : '') + '" data-regio="' + r.id + '"' +
         ' role="button" tabindex="0" aria-pressed="' + aan + '">' +
@@ -924,7 +959,6 @@
           : '<button type="button" class="em-fotoknop" data-foto="' + r.id + '">' +
               'Eigen foto</button>') : '') +
         '</div>';
-    }).join('');
   }
 
   elRaster.addEventListener('click', function (e) {
@@ -987,12 +1021,19 @@
     if (aantal <= 4) return 275;
     if (aantal <= 6) return 182;
     if (aantal <= 8) return 138;
-    return 106;
+    if (aantal <= 10) return 106;
+    if (aantal <= 12) return 88;
+    // Vanaf dertien gaat ook de compacte stand aan (em-vol, zie tekenBlad);
+    // nagemeten met alle zestien aangevinkt, eenzijdig en beidezijdig.
+    return 64;
   }
 
   function tekenBlad() {
     var lijst = gekozen();
     elBlad.style.setProperty('--fotohoog', fotoHoogte(lijst.length) + 'px');
+    // Vanaf dertien regio's alles een slag kleiner, anders valt het briefje
+    // van het vel. Tot en met twaalf verandert er niets aan de maten.
+    elBlad.classList.toggle('em-vol', lijst.length >= 13);
 
     if (!lijst.length) {
       elBlad.innerHTML = '<div class="em-leeg">Kies hierboven één of meer regio\'s. ' +

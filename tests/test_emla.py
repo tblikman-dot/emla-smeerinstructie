@@ -1,4 +1,4 @@
-# Emla-smeerinstructie, losse app: de tien regio's, het briefje en de tekst
+# Emla-smeerinstructie, losse app: de zestien regio's, het briefje en de tekst
 # voor de brief. Draai met:  python3 -m http.server 9053  in de hoofdmap.
 #
 # Waar dit vooral op let: de zinnen moeten LETTERLIJK de overgetypte zinnen zijn
@@ -26,12 +26,23 @@ ZINNEN = [
     # aanwijzing van de arts, zinnen geschreven zoals de zeven andere.
     "Smeer de bovenkant van de voet in, van de enkel tot aan de tenen.",
     "Smeer de liesregio in.",
+    # De zes arm- en schouderregio's: toegevoegd op verzoek van de arts,
+    # zinnen door mij geschreven in de bewoording van de posterregio's.
+    "Smeer de voorzijde van de schouder en de borst in.",
+    "Smeer de bovenrand van de schouder in, van nek tot schouderkop.",
+    "Smeer de voorzijde van de bovenarm in, van schouder tot elleboog.",
+    "Smeer de achterzijde van de bovenarm in, van schouder tot elleboog.",
+    "Smeer de binnenzijde van de onderarm in, van elleboog tot pols.",
+    "Smeer de handpalm en de duimmuis in.",
     # De open plek heeft geen meegeleverde foto; de gebruiker zet er zelf een in.
     "Smeer het gemarkeerde gebied op de foto in.",
 ]
 ALLE = ["Liesregio", "Voorzijde bovenbeen", "Binnenzijde bovenbeen",
         "Achterzijde bovenbeen", "Kuitregio", "Voorzijde onderbeen",
         "Bovenkant van de voet", "Binnenzijde van de voet", "Onderkant van de voet",
+        "Schouder en borst, voorzijde", "Bovenrand van de schouder",
+        "Voorzijde bovenarm", "Achterzijde bovenarm",
+        "Binnenzijde onderarm", "Handpalm en duimmuis",
         "Andere locatie"]
 # De open plek: geen meegeleverd beeld, dus hij doet niet mee aan de toetsen
 # over spiegelen en over meegeleverde fotos.
@@ -66,7 +77,7 @@ with sync_playwright() as p:
     pg.goto(URL)
     pg.wait_for_timeout(500)
 
-    check("tien regio's", pg.locator(".em-kaart").count() == 10,
+    check("zestien regio's", pg.locator(".em-kaart").count() == 16,
           "| " + str(pg.locator(".em-kaart").count()))
     check("geen horizontale scroll", pg.evaluate("document.documentElement.scrollWidth") <= 390)
 
@@ -140,7 +151,9 @@ with sync_playwright() as p:
     # hoort hij gespiegeld te staan en bij "beide" twee keer. Spiegelen is
     # makkelijk andersom te krijgen en een gespiegeld briefje is een echte fout,
     # dus dit wordt per regio en per kant nagemeten.
-    MET_FOTO = [n for n in ALLE if n != OPEN]
+    # Alleen de negen beenregio's hebben een meegeleverde foto; de zes arm-
+    # en schouderregio's zijn tekeningen en de open plek heeft niets.
+    MET_FOTO = ALLE[:9]
 
     def spiegelstand():
         return pg.evaluate("""() => [...document.querySelectorAll('#emBlad .em-tekfoto')]
@@ -172,7 +185,7 @@ with sync_playwright() as p:
         kies(pg, naam)
         pg.wait_for_timeout(80)
 
-    check("negen van de tien regio's hebben een meegeleverde foto",
+    check("negen van de zestien regio's hebben een meegeleverde foto",
           pg.evaluate("() => EMLA.regios.filter(r => r.foto).length") == 9,
           "| " + str(pg.evaluate("() => EMLA.regios.filter(r => r.foto).length")))
     # De vijf beenregio's houden hun anatomische tekening als terugval; de foto
@@ -210,6 +223,62 @@ with sync_playwright() as p:
     check("er is geen eigen schets meer over",
           pg.evaluate("""() => EMLA.regios
               .filter(r => r.tekening && r.tekening.soort === 'schets').length""") == 0)
+
+    # ---- arm en schouder: tekeningen, met de juiste kant ----
+    # Geen foto's; deze zes gebruiken de lichaamsomtrek met een band erover.
+    # Het keuzescherm staat in drie groepen.
+    check("drie groepen op het keuzescherm",
+          pg.evaluate("""() => [...document.querySelectorAll('.em-groepkop')]
+              .map(h => h.textContent)""") == ["Benen", "Arm en schouder", "Ergens anders"])
+    check("zes armregio's, allemaal als tekening",
+          pg.evaluate("""() => EMLA.regios.filter(r => r.groep === 'arm').length""") == 6
+          and pg.evaluate("""() => EMLA.regios.filter(r => r.groep === 'arm'
+              && r.tekening && !r.foto).length""") == 6)
+
+    # De kant is hier hard getoetst, niet afgeleid uit de data. Redenering: bij
+    # een vooraanzicht kijk je de patiënt aan, dus rechts van de patiënt is
+    # links in beeld; bij een achteraanzicht wijzen jullie dezelfde kant op en
+    # is rechts gewoon rechts in beeld. De banden staan in beeldcoördinaten
+    # (bovenarm: x=190 beeld-links, x=664 beeld-rechts), dus de x van de
+    # getekende rechthoek verraadt welke kant oplicht.
+    def band_x(naam):
+        return pg.evaluate("""(n) => {
+          const regio = [...document.querySelectorAll('#emBlad .em-bladregio')]
+            .find(d => d.textContent.includes(n));
+          if (!regio) return 'regio niet op het briefje';
+          return [...regio.querySelectorAll('svg rect.em-zone')]
+            .map(r => Number(r.getAttribute('x'))).sort((a, b) => a - b);
+        }""", naam)
+
+    def zet_kant(naam, knop):
+        pg.locator(".em-kaart", has_text=naam).first.locator(
+            ".em-kant", has_text=knop).click()
+        pg.wait_for_timeout(150)
+
+    kies(pg, "Voorzijde bovenarm")                     # vooraanzicht
+    pg.wait_for_timeout(150)
+    check("bovenarm voor, beide: twee banden",
+          band_x("Voorzijde bovenarm") == [190, 664],
+          "| " + str(band_x("Voorzijde bovenarm")))
+    zet_kant("Voorzijde bovenarm", "Rechts")
+    check("bovenarm voor, rechts: de band staat links in beeld",
+          band_x("Voorzijde bovenarm") == [190], "| " + str(band_x("Voorzijde bovenarm")))
+    zet_kant("Voorzijde bovenarm", "Links")
+    check("bovenarm voor, links: de band staat rechts in beeld",
+          band_x("Voorzijde bovenarm") == [664], "| " + str(band_x("Voorzijde bovenarm")))
+    kies(pg, "Voorzijde bovenarm")
+    pg.wait_for_timeout(100)
+
+    kies(pg, "Achterzijde bovenarm")                   # achteraanzicht
+    pg.wait_for_timeout(150)
+    zet_kant("Achterzijde bovenarm", "Rechts")
+    check("bovenarm achter, rechts: de band staat rechts in beeld",
+          band_x("Achterzijde bovenarm") == [664], "| " + str(band_x("Achterzijde bovenarm")))
+    zet_kant("Achterzijde bovenarm", "Links")
+    check("bovenarm achter, links: de band staat links in beeld",
+          band_x("Achterzijde bovenarm") == [190], "| " + str(band_x("Achterzijde bovenarm")))
+    kies(pg, "Achterzijde bovenarm")
+    pg.wait_for_timeout(100)
 
     # kiezen, kant wisselen
     kies(pg, "Voorzijde bovenbeen")
@@ -336,7 +405,7 @@ with sync_playwright() as p:
     pg.emulate_media(media="print")
     pg.wait_for_timeout(200)
     hoogte = pg.evaluate("document.body.scrollHeight")
-    check("tien regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
+    check("zestien regio's én een tijd passen op één A4", hoogte <= 1123, "| " + str(hoogte) + " px")
 
     # Alles hierboven staat op "beide zijden". Eenzijdig loopt door een ander
     # stuk code — daar wordt het beeld gespiegeld — en werd nergens op papier
@@ -359,13 +428,13 @@ with sync_playwright() as p:
     h1 = pg3.evaluate("document.body.scrollHeight")
     fh1 = pg3.evaluate("""() => getComputedStyle(document.getElementById('emBlad'))
         .getPropertyValue('--fotohoog').trim()""")
-    check("tien regio's eenzijdig passen op één A4 (foto " + fh1 + ")",
+    check("zestien regio's eenzijdig passen op één A4 (foto " + fh1 + ")",
           h1 <= 1123, "| " + str(h1) + " px")
     pg3.close()
 
     # De foto's worden groter naarmate er minder regio's op het briefje staan.
     # Elk aantal moet op één A4 blijven passen; dat wordt hier allemaal gemeten.
-    for aantal in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
+    for aantal in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16):
         pg2 = b.new_context(viewport={"width": 794, "height": 1123}).new_page()
         pg2.goto(URL)
         pg2.wait_for_timeout(450)

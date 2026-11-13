@@ -79,6 +79,13 @@
   var BOX_KUIT       = '318 996 388 420';   // knieplooi tot de hiel
   var BOX_SCHEEN     = '318 976 388 372';   // knie tot enkel
 
+  // uitsnedes voor arm en schouder (zie de meetnotitie bij die regio's)
+  var BOX_SCHOUDER_VOOR   = '240 220 544 320';   // borst en schouders, voor
+  var BOX_SCHOUDER_ACHTER = '272 160 480 280';   // nek en schouderranden, achter
+  var BOX_ARM_BOVEN       = '150 420 724 300';   // beide bovenarmen, met romp ertussen
+  var BOX_ARM_ONDER       = '150 590 724 230';   // beide onderarmen
+  var BOX_HAND            = '140 680 744 170';   // beide handen
+
   var REGIOS = [
     {
       // NEGENDE REGIO, een toevoeging van de gebruiker; stond niet in de
@@ -88,6 +95,7 @@
       // daar wordt niets over beweerd. De foto laat het gebied zien.
       // Staat vooraan omdat de regio's van boven naar beneden lopen.
       id: 'lies',
+      groep: 'been',
       titel: 'Liesregio',
       sub: '',
       zin: 'Smeer de liesregio in.',
@@ -97,6 +105,7 @@
     },
     {
       id: 'bovenbeenvoor',
+      groep: 'been',
       titel: 'Voorzijde bovenbeen',
       sub: '',
       zin: 'Smeer de volledige voorzijde van het bovenbeen in, van heup tot net boven de knie.',
@@ -109,6 +118,7 @@
     },
     {
       id: 'adductoren',
+      groep: 'been',
       titel: 'Binnenzijde bovenbeen',
       sub: '',
       zin: 'Smeer de binnenzijde van het bovenbeen in, van lies tot knie.',
@@ -123,6 +133,7 @@
     },
     {
       id: 'hamstrings',
+      groep: 'been',
       titel: 'Achterzijde bovenbeen',
       sub: '',
       zin: 'Smeer de achterzijde van het bovenbeen in, van bilplooi tot net boven de knie.',
@@ -136,6 +147,7 @@
     },
     {
       id: 'kuit',
+      groep: 'been',
       titel: 'Kuitregio',
       sub: '',
       zin: 'Smeer de volledige kuit in, van net onder de knieplooi tot aan de hiel.',
@@ -148,6 +160,7 @@
     },
     {
       id: 'scheen',
+      groep: 'been',
       titel: 'Voorzijde onderbeen',
       sub: '',
       zin: 'Smeer de voorzijde van het onderbeen in, over de volledige voorste onderbeenregio (van knie tot enkel).',
@@ -164,6 +177,7 @@
       // de zin hieronder is van mij, op haar aanwijzing geschreven in dezelfde
       // bewoording als de andere zeven. Zie de kop van dit bestand.
       id: 'voetrug',
+      groep: 'been',
       titel: 'Bovenkant van de voet',
       sub: '',
       zin: 'Smeer de bovenkant van de voet in, van de enkel tot aan de tenen.',
@@ -172,6 +186,7 @@
     },
     {
       id: 'voetmediaal',
+      groep: 'been',
       titel: 'Binnenzijde van de voet',
       sub: '',
       zin: 'Smeer de binnenzijde van de voet in.',
@@ -184,6 +199,7 @@
     },
     {
       id: 'voetzool',
+      groep: 'been',
       titel: 'Onderkant van de voet',
       sub: '',
       zin: 'Smeer de onderkant van de voet in, van de hiel tot aan de tenen.',
@@ -195,17 +211,112 @@
       // andere zeven de rechter. Zet hem dus niet 'gelijk' met de rest.
       fotoKant: 'L',
     },
+
+    // ---- ARM EN SCHOUDER ----
+    //
+    // TOEGEVOEGD OP VERZOEK VAN DE GEBRUIKER; deze zes staan niet op de poster.
+    // De zinnen zijn door mij geschreven, in de bewoording van de posterregio's.
+    // De keuze van de regio's volgt de gebruikelijke bovenste-extremiteit-
+    // doelspieren bij spasticiteit en dystonie; de arts moet ze nalopen en
+    // schrappen of aanvullen wat niet klopt. De spiernamen staan alleen bij
+    // 'arts' (keuzescherm), nooit op het briefje.
+    //
+    // Geen eigen foto's van de armen; deze regio's gebruiken de lichaams-
+    // tekening uit anatomie-data.js, met een band die op de omtrek wordt
+    // afgeknipt — zoals de beenregio's vóór de foto's. Komen er armfoto's,
+    // dan volstaat 'foto:' + 'fotoKant:' erbij, net als bij de benen.
+    //
+    // De banden staan in beeldcoördinaten (vlak van 1024 x 1536), opgemeten op
+    // het silhouet: armen los van de romp vanaf y±500, elleboog ±655, pols
+    // ±748, hand tot ±836. De band mag ruim zijn; alles buiten de omtrek wordt
+    // weggeknipt. Hij mag alleen de romp niet raken.
+    {
+      id: 'schouderborst',
+      groep: 'arm',
+      titel: 'Schouder en borst, voorzijde',
+      sub: '',
+      zin: 'Smeer de voorzijde van de schouder en de borst in.',
+      arts: 'Pectoralis major; voorste deel deltoideus.',
+      tekening: {
+        soort: 'lichaamsband', aanzicht: 'voor', box: BOX_SCHOUDER_VOOR,
+        band: { LEFT: [280, 292, 232, 180], RIGHT: [512, 292, 232, 180] },
+      },
+    },
+    {
+      id: 'schoudernek',
+      groep: 'arm',
+      titel: 'Bovenrand van de schouder',
+      sub: '',
+      zin: 'Smeer de bovenrand van de schouder in, van nek tot schouderkop.',
+      arts: 'Trapezius, bovenste deel.',
+      tekening: {
+        soort: 'lichaamsband', aanzicht: 'achter', box: BOX_SCHOUDER_ACHTER,
+        band: { LEFT: [300, 238, 212, 135], RIGHT: [512, 238, 212, 135] },
+      },
+    },
+    {
+      id: 'bovenarmvoor',
+      groep: 'arm',
+      titel: 'Voorzijde bovenarm',
+      sub: '',
+      zin: 'Smeer de voorzijde van de bovenarm in, van schouder tot elleboog.',
+      arts: 'Biceps en brachialis.',
+      tekening: {
+        soort: 'lichaamsband', aanzicht: 'voor', box: BOX_ARM_BOVEN,
+        band: { LEFT: [190, 500, 170, 158], RIGHT: [664, 500, 170, 158] },
+      },
+    },
+    {
+      id: 'bovenarmachter',
+      groep: 'arm',
+      titel: 'Achterzijde bovenarm',
+      sub: '',
+      zin: 'Smeer de achterzijde van de bovenarm in, van schouder tot elleboog.',
+      arts: 'Triceps.',
+      tekening: {
+        soort: 'lichaamsband', aanzicht: 'achter', box: BOX_ARM_BOVEN,
+        band: { LEFT: [190, 500, 170, 158], RIGHT: [664, 500, 170, 158] },
+      },
+    },
+    {
+      id: 'onderarmbinnen',
+      groep: 'arm',
+      titel: 'Binnenzijde onderarm',
+      sub: '',
+      // In de anatomische houding (handpalmen naar voren) wijst de buigzijde
+      // van de onderarm naar voren; vandaar het vooraanzicht.
+      zin: 'Smeer de binnenzijde van de onderarm in, van elleboog tot pols.',
+      arts: 'Pols- en vingerbuigers; pronator teres.',
+      tekening: {
+        soort: 'lichaamsband', aanzicht: 'voor', box: BOX_ARM_ONDER,
+        band: { LEFT: [180, 658, 170, 90], RIGHT: [674, 658, 170, 90] },
+      },
+    },
+    {
+      id: 'hand',
+      groep: 'arm',
+      titel: 'Handpalm en duimmuis',
+      sub: '',
+      zin: 'Smeer de handpalm en de duimmuis in.',
+      arts: 'Duimmuis; adductor pollicis.',
+      tekening: {
+        soort: 'lichaamsband', aanzicht: 'voor', box: BOX_HAND,
+        band: { LEFT: [170, 748, 180, 88], RIGHT: [674, 748, 180, 88] },
+      },
+    },
+
     {
       // DE OPEN PLEK. Als enige regio zonder meegeleverde foto en zonder
       // tekening. Hier zet de gebruiker zelf een foto in — camera of bestand —
       // en markeert daarop waar de creme moet komen, met hetzelfde vlak als bij
-      // de andere regio's. Bedoeld voor alles wat niet onder de negen regio's
-      // hierboven valt.
+      // de andere regio's. Bedoeld voor alles wat niet onder de vijftien
+      // regio's hierboven valt.
       //
       // Zonder foto heeft deze regio niets te laten zien: op het scherm staat
       // er dan een leeg vak, en printen wordt tegengehouden. Zie emPrint in
       // index.html.
       id: 'eigen',
+      groep: 'anders',
       titel: 'Andere locatie',
       sub: '',
       zin: 'Smeer het gemarkeerde gebied op de foto in.',
