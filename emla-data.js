@@ -99,7 +99,7 @@
       titel: 'Voorzijde bovenbeen',
       sub: '',
       zin: 'Smeer de volledige voorzijde van het bovenbeen in, van heup tot net boven de knie.',
-      arts: 'Rectus femoris en de overige quadriceps; dit waren eerst twee regio\u2019s.',
+      arts: 'Rectus femoris.',
       foto: 'smeer-bovenbeen-voor.webp',
       fotoKant: 'R',
       tekening: {
