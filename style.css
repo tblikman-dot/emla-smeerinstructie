@@ -91,6 +91,20 @@ a { color: var(--accent); }
   color: var(--inkt);
 }
 
+/* Het logo links in de balk. Net als het merkje rechts staat het absoluut
+   geplaatst, zodat de titel in het midden van de balk blijft. Vol contrast:
+   dezelfde inktkleur als de tekst, in licht en in donker. */
+.topbar-logo {
+  position: absolute; left: 14px;
+  display: flex; align-items: center;
+  color: var(--inkt);
+}
+.topbar-logo svg { width: 19px; height: 19px; display: block; }
+@media (max-width: 380px) {
+  .topbar-logo { left: 10px; }
+  .topbar-logo svg { width: 17px; height: 17px; }
+}
+
 /* Klein copyrightregeltje rechts in de balk: van wie deze app is. Absoluut geplaatst en
    niet in de flexrij, zodat de titel in het midden van de balk blijft staan en
    niet opschuift. Bewust onopvallend: het hoort niet te concurreren met de

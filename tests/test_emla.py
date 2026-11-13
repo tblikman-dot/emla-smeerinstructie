@@ -89,6 +89,25 @@ with sync_playwright() as p:
     check("de titel staat nog in het midden",
           abs((tdoos["x"] + tdoos["width"] / 2) - 195) <= 2,
           "| midden=" + str(round(tdoos["x"] + tdoos["width"] / 2)))
+    # Het logo links in de balk, zoals het Apple-logo in hun eigen balk: links
+    # van de titel, en in één kleur — dezelfde inkt als de tekst, geen
+    # kleurvlakken zoals de app-tegel die wel heeft.
+    logo = pg.locator(".topbar-logo")
+    check("er staat een logo in de balk", logo.count() == 1)
+    ldoos = logo.bounding_box()
+    check("het logo staat links van de titel", ldoos["x"] + ldoos["width"] < tdoos["x"],
+          "| logo eindigt op " + str(round(ldoos["x"] + ldoos["width"]))
+          + ", titel begint op " + str(round(tdoos["x"])))
+    kleuren = pg.evaluate("""() => {
+        const l = getComputedStyle(document.querySelector('.topbar-logo')).color;
+        const t = getComputedStyle(document.querySelector('.topbar-title')).color;
+        const vlakken = [...document.querySelectorAll('.topbar-logo svg *')]
+            .map(e => getComputedStyle(e).fill);
+        return { logo: l, titel: t, vlakken: [...new Set(vlakken)] }; }""")
+    check("het logo heeft dezelfde inkt als de titel",
+          kleuren["logo"] == kleuren["titel"], "| " + str(kleuren))
+    check("het logo is één kleur", len(kleuren["vlakken"]) == 1, "| " + str(kleuren["vlakken"]))
+
     # De balk hoort doorzichtig te zijn, met een vervaging erachter. De
     # vervaging zelf is hier niet te meten: deze browser zegt dat hij
     # backdrop-filter kan, maar vervaagt in een schermafbeelding niets. Dat de
@@ -453,6 +472,18 @@ with sync_playwright() as p:
     check("er staat een weghaalknop op het kaartje",
           pg.locator(".em-kaart", has_text="Binnenzijde van de voet").first.locator(
               "[data-fotoweg]").count() == 1)
+
+    # Geen gekleurde emoji op het scherm. Die stonden op de knoppen en in het
+    # lege fotovak, en dat oogde rommelig naast de rest. Lijntekeningetjes en
+    # kale woorden in de plaats. (C), (R) en -- vallen hier niet onder.
+    rommel = pg.evaluate("""() => {
+        const uit = [];
+        for (const ch of document.body.innerText) {
+          const c = ch.codePointAt(0);
+          if (c >= 0x1F300 || c === 0x270E || c === 0x2715) uit.push(ch);
+        }
+        return [...new Set(uit)]; }""")
+    check("geen emoji op het scherm", rommel == [], "| " + str(rommel))
 
     IN_DB = """async () => {
       const db = await new Promise(r => { const q = indexedDB.open('krnFotos');
