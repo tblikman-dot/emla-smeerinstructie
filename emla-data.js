@@ -91,6 +91,7 @@
       titel: 'Liesregio',
       sub: '',
       zin: 'Smeer de liesregio in.',
+      arts: 'Iliopsoas.',
       foto: 'smeer-lies.webp',
       fotoKant: 'R',
     },
