@@ -485,9 +485,12 @@ with sync_playwright() as p:
         return [...new Set(uit)]; }""")
     check("geen emoji op het scherm", rommel == [], "| " + str(rommel))
 
+    # Verdraagt een browser waar de database nog helemaal niet bestaat; dat is
+    # de toestand bij iemand die nog nooit een foto heeft toegevoegd.
     IN_DB = """async () => {
       const db = await new Promise(r => { const q = indexedDB.open('krnFotos');
-        q.onsuccess = () => r(q.result); });
+        q.onsuccess = () => r(q.result); q.onerror = () => r(null); });
+      if (!db || !db.objectStoreNames.contains('fotos')) return 'geen database';
       return await new Promise(r => {
         const t = db.transaction('fotos','readonly').objectStore('fotos').getAll();
         t.onsuccess = () => r(t.result.map(x => x.catId));
@@ -495,6 +498,28 @@ with sync_playwright() as p:
     }"""
     check("de foto staat nu in de database", pg.evaluate(IN_DB) == ["emla:voetmediaal"],
           "| " + str(pg.evaluate(IN_DB)))
+
+    # Privacy. De foto van de een mag nooit bij de ander opduiken: er is geen
+    # server, er wordt niets verstuurd, en de foto staat in de opslag van déze
+    # browser op dít toestel. Een tweede browservenster is daarmee een andere
+    # persoon. Deze toets valt om zodra er ooit toch gedeelde opslag onder komt.
+    ctx2 = b.new_context(viewport={"width": 420, "height": 900})
+    naarbuiten2 = []
+    ctx2.on("request", lambda r: naarbuiten2.append(r.url)
+            if "localhost:9053" not in r.url else None)
+    pg2 = ctx2.new_page()
+    pg2.goto(URL)
+    pg2.wait_for_timeout(700)
+    pg2.locator(".em-kaart", has_text="Binnenzijde van de voet").first.click()
+    pg2.wait_for_timeout(400)
+    check("een andere bezoeker ziet de foto van de eerste niet",
+          pg2.locator("#emBlad .em-bfoto img").count() == 0
+          and pg2.evaluate(IN_DB) == "geen database",
+          "| beelden=" + str(pg2.locator("#emBlad .em-bfoto img").count())
+          + " db=" + str(pg2.evaluate(IN_DB)))
+    check("en die tweede bezoeker haalt ook niets van buiten",
+          not naarbuiten2, "| " + str(naarbuiten2)[:120])
+    ctx2.close()
 
     pg.locator(".em-kaart", has_text="Binnenzijde van de voet").first.locator(
         "[data-fotoweg]").click()
