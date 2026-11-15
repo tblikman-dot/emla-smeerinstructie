@@ -5,7 +5,9 @@ botulinetoxine-injecties. Je vinkt de regio's aan, kiest links of rechts, en
 print het als A4 of als pdf. Er is ook een versie als platte tekst om in het
 dossier te plakken.
 
-Naast de negen vaste regio's is er een open plek, **Andere locatie**: daar zet je
+Er zijn vijftien vaste regio's: negen voor de benen (met foto's) en zes voor arm
+en schouder (tekeningen op de lichaamsomtrek). Daarnaast is er een open plek,
+**Andere locatie**: daar zet je
 zelf een foto in — camera of bestand — en markeer je erop waar de crème moet
 komen. Die foto blijft op je eigen toestel.
 
